@@ -35,6 +35,16 @@ NEXT_PUBLIC_MOCK_MODE=false
 
 Note: `NEXT_PUBLIC_PORTKEY_PROVIDER` is optional. If you have a provider configured in your Portkey dashboard, you can reference it here. Otherwise, Portkey will use your default gateway configuration.
 
+### API Configuration
+
+The web app connects to the Evolv API backend. Configure the API URL:
+
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+If not set, defaults to `http://localhost:8000`. Make sure the API server is running when using the dashboard, families, or prompts pages.
+
 ### Development
 
 ```bash
