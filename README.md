@@ -20,11 +20,17 @@ Evolv ingests prompts from production systems, extracts their structural DNA (va
 
 - Python 3.11+
 - [UV](https://github.com/astral-sh/uv) package manager
+- Node.js 18+ (for web app)
 
 ### Installation
 
 ```bash
+# Install Python dependencies
 uv sync
+
+# Install web app dependencies
+cd apps/web
+npm install
 ```
 
 ### Run the API
@@ -49,7 +55,6 @@ uv run genome stats                     # System statistics
 
 ```bash
 cd apps/web
-npm install
 npm run dev
 ```
 
@@ -60,10 +65,12 @@ Visit `http://localhost:3000` for the dashboard and log generator.
 Monorepo structure with:
 - **apps/api** – FastAPI REST service
 - **apps/cli** – Command-line interface
-- **apps/web** – Next.js dashboard
+- **apps/web** – Next.js dashboard and log generator
 - **packages/** – Core logic (ingestion, DNA extraction, clustering, storage)
 
 ## Environment Variables
+
+### Backend (API/CLI)
 
 Copy `.env.example` to `.env`:
 
@@ -71,6 +78,28 @@ Copy `.env.example` to `.env`:
 PORTKEY_API_KEY=your_key_here
 DATABASE_URL=sqlite:///./data/genome.db
 ```
+
+### Web App
+
+Copy `apps/web/.env.example` to `apps/web/.env.local`:
+
+```bash
+NEXT_PUBLIC_PORTKEY_API_KEY=your_portkey_api_key
+NEXT_PUBLIC_PORTKEY_PROVIDER=your_provider_id  # Optional
+NEXT_PUBLIC_MOCK_MODE=false
+NEXT_PUBLIC_API_URL=http://localhost:8000  # Default
+```
+
+## Web App Features
+
+The web application provides:
+
+- **Dashboard** – Overview of prompts, families, and templates
+- **Log Generator** – Generate prompt logs for Portkey observability
+- **Family Explorer** – Browse and analyze prompt families
+- **Prompt Details** – View DNA structure and evolution lineage
+
+Logs generated are automatically sent to Portkey observability and can be ingested by the Evolv system.
 
 ## Why This Matters
 
