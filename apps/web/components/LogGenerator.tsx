@@ -201,7 +201,7 @@ export default function LogGenerator({
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Enter a short prompt..."
-            className="w-full px-4 py-3 border border-input bg-background rounded-lg focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            className="w-full px-4 py-2 border border-input bg-background rounded-md focus:ring-2 focus:ring-ring focus:ring-offset-2"
             rows={3}
           />
           <Button
@@ -216,11 +216,11 @@ export default function LogGenerator({
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-semibold mb-2">Model</label>
+            <label className="block text-sm font-medium mb-2">Model</label>
             <select
               value={model}
               onChange={(e) => setModel(e.target.value)}
-              className="w-full px-4 py-2 border border-input bg-background rounded-lg focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              className="w-full px-4 py-2 border border-input bg-background rounded-md focus:ring-2 focus:ring-ring focus:ring-offset-2"
               disabled={useMock}
             >
               <option value="gpt-4o-mini">GPT-4o Mini</option>
@@ -228,7 +228,7 @@ export default function LogGenerator({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-semibold mb-2">Mode</label>
+            <label className="block text-sm font-medium mb-2">Mode</label>
             <div className="flex items-center h-10">
               <label className="flex items-center cursor-pointer">
                 <input
@@ -251,27 +251,19 @@ export default function LogGenerator({
         <Button
           onClick={handleGenerate}
           disabled={isGenerating || !prompt.trim()}
-          className="w-full font-semibold h-11"
-          size="lg"
+          className="w-full"
         >
-          {isGenerating ? (
-            <>
-              <span className="animate-spin mr-2">?</span>
-              Generating...
-            </>
-          ) : (
-            'Generate Log'
-          )}
+          {isGenerating ? 'Generating...' : 'Generate Log'}
         </Button>
 
-        <div className="border-t pt-4 mt-4">
-          <h3 className="text-lg font-semibold mb-4">Auto Generation</h3>
-          <div className="space-y-4">
+        <div className="border-t pt-4">
+          <h3 className="text-lg font-semibold mb-3">Auto Generation</h3>
+          <div className="space-y-3">
             <div>
-              <label className="block text-sm font-semibold mb-3">
-                Rate: <span className="text-blue-600 font-bold">{generationRate.toFixed(1)}</span> log{generationRate !== 1 ? 's' : ''} per second
+              <label className="block text-sm font-medium mb-2">
+                Rate: {generationRate.toFixed(1)} log{generationRate !== 1 ? 's' : ''} per second
                 {useMock && (
-                  <span className="ml-2 text-xs text-green-600 font-normal">
+                  <span className="ml-2 text-xs text-green-600">
                     (Can go up to 30+ in mock mode)
                   </span>
                 )}
@@ -283,7 +275,7 @@ export default function LogGenerator({
                 step="0.1"
                 value={generationRate}
                 onChange={(e) => setGenerationRate(parseFloat(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                className="w-full"
                 disabled={isAutoGenerating}
               />
               <div className="flex justify-between text-xs text-muted-foreground mt-1">
@@ -294,21 +286,13 @@ export default function LogGenerator({
             <Button
               onClick={handleAutoGenerate}
               variant={isAutoGenerating ? 'destructive' : 'default'}
-              className="w-full font-semibold h-11"
-              size="lg"
+              className="w-full"
               disabled={isGenerating && !isAutoGenerating}
             >
-              {isAutoGenerating ? (
-                <>
-                  <span className="animate-pulse mr-2">?</span>
-                  Stop Auto Generation
-                </>
-              ) : (
-                'Start Auto Generation'
-              )}
+              {isAutoGenerating ? 'Stop Auto Generation' : 'Start Auto Generation'}
             </Button>
             {isAutoGenerating && (
-              <p className="text-xs text-center text-muted-foreground animate-pulse">
+              <p className="text-xs text-center text-muted-foreground">
                 Generating logs automatically...
               </p>
             )}
