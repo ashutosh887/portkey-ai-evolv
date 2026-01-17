@@ -1,4 +1,4 @@
-# 🧬 Evolv
+# Evolv
 
 > **Your prompts, but smarter every week.**
 
@@ -11,11 +11,11 @@ extracts their "DNA" (structure, variables, constraints), clusters them into pro
 and tracks how they evolve over time.
 
 **Transform prompt sprawl into:**
-- 🧬 Canonical templates with automatic extraction
-- 📈 Clear lineage and evolution tracking
-- 🔍 Explainable grouping with confidence scores
-- ⚙️ Continuous, incremental processing
-- 🔗 Deep integration with Portkey observability
+- Canonical templates with automatic extraction
+- Clear lineage and evolution tracking
+- Explainable grouping with confidence scores
+- Continuous, incremental processing
+- Deep integration with Portkey observability
 
 ---
 
@@ -218,4 +218,4 @@ MIT
 
 ---
 
-**Built for hackathons. Built to win.** 🏆
+**Built for AI Builders Challenge by [Portkey AI](https://github.com/Portkey-AI/).**
