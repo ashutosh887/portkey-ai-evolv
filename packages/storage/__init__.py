@@ -11,6 +11,7 @@ from packages.storage.models import (
 from packages.storage.repositories import (
     PromptRepository,
     FamilyRepository,
+    TemplateRepository,
 )
 
 __all__ = [
@@ -23,4 +24,5 @@ __all__ = [
     "Template",
     "PromptRepository",
     "FamilyRepository",
+    "TemplateRepository",
 ]

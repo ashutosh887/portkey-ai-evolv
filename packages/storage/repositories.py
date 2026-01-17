@@ -131,6 +131,30 @@ class PromptRepository:
             .all()
         )
 
+    def count_all(self) -> int:
+        """Get total count of prompts."""
+        return self.db.query(PromptInstanceModel).count()
+    
+    def count_pending(self) -> int:
+        """Get count of prompts without family assignment."""
+        return (
+            self.db.query(PromptInstanceModel)
+            .filter(PromptInstanceModel.family_id.is_(None))
+            .count()
+        )
+    
+    def get_paginated(
+        self,
+        family_id: Optional[str] = None,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> List[PromptInstanceModel]:
+        """Get prompts with pagination and optional family filter."""
+        query = self.db.query(PromptInstanceModel)
+        if family_id:
+            query = query.filter(PromptInstanceModel.family_id == family_id)
+        return query.order_by(PromptInstanceModel.created_at.desc()).offset(offset).limit(limit).all()
+
 
 class FamilyRepository:
     """Repository for family operations"""
@@ -195,3 +219,36 @@ class FamilyRepository:
         self.db.commit()
         self.db.refresh(template)
         return template
+
+    def get_template_by_family(self, family_id: str) -> Optional[TemplateModel]:
+        """Get the template for a family (assumes one template per family)."""
+        return (
+            self.db.query(TemplateModel)
+            .filter(TemplateModel.family_id == family_id)
+            .order_by(TemplateModel.created_at.desc())
+            .first()
+        )
+
+    def count_all(self) -> int:
+        """Get total count of families."""
+        return self.db.query(PromptFamilyModel).count()
+
+
+class TemplateRepository:
+    """Repository for template operations."""
+    
+    def __init__(self, db: Session):
+        self.db = db
+    
+    def get_by_family(self, family_id: str) -> Optional[TemplateModel]:
+        """Get template for a family."""
+        return (
+            self.db.query(TemplateModel)
+            .filter(TemplateModel.family_id == family_id)
+            .order_by(TemplateModel.created_at.desc())
+            .first()
+        )
+    
+    def count_all(self) -> int:
+        """Get total count of templates."""
+        return self.db.query(TemplateModel).count()
