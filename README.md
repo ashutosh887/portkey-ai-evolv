@@ -65,17 +65,12 @@ evolv/
 ```bash
 # Install dependencies
 uv sync
-
-# Activate virtual environment (UV creates it automatically)
-source .venv/bin/activate  # On macOS/Linux
-# or
-.venv\Scripts\activate  # On Windows
 ```
 
 ### Run the API
 
 ```bash
-uvicorn apps.api.main:app --reload
+uv run uvicorn apps.api.main:app --reload
 ```
 
 API will be available at `http://localhost:8000`
@@ -86,25 +81,25 @@ API will be available at `http://localhost:8000`
 
 ```bash
 # Ingest prompts from a file
-genome ingest data/prompts.json
+uv run genome ingest data/prompts.json
 
 # Process pending prompts
-genome run
+uv run genome run
 
 # List all prompt families
-genome families
+uv run genome families
 
 # Show family details
-genome family <family_id>
+uv run genome family <family_id>
 
 # Show canonical template
-genome template <family_id>
+uv run genome template <family_id>
 
 # Show evolution chain
-genome evolve <prompt_id>
+uv run genome evolve <prompt_id>
 
 # System statistics
-genome stats
+uv run genome stats
 ```
 
 ---
@@ -156,6 +151,8 @@ docker build -f infra/Dockerfile -t evolv .
 # Run
 docker run -p 8000:8000 evolv
 ```
+
+The Dockerfile uses UV for dependency management and runs the API with `uv run`.
 
 ### Recommended Platforms
 
