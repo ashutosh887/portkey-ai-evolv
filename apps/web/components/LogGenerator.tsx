@@ -169,7 +169,6 @@ export default function LogGenerator({
     }
 
     generateLoop().catch((error) => {
-      console.error('Auto generation error:', error)
       autoGenRef.current = false
       setIsAutoGenerating(false)
     })

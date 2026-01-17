@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { api, Prompt } from '@/lib/api'
 import { Database, RefreshCw, AlertCircle, Link as LinkIcon } from 'lucide-react'
 import Link from 'next/link'
+import toast from 'react-hot-toast'
 
 export default function PromptsPage() {
   const [prompts, setPrompts] = useState<Prompt[]>([])
@@ -24,7 +25,9 @@ export default function PromptsPage() {
       setPrompts(data.prompts)
       setTotal(data.total)
     } catch (err: any) {
-      setError(err.message || 'Failed to load prompts')
+      const errorMessage = err.message || 'Failed to load prompts'
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }

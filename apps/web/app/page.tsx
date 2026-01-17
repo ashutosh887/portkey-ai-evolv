@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Database, Zap, TrendingUp, BarChart3, GitBranch, FileCode } from 'lucide-react'
 import Link from 'next/link'
 import Logo from '@/components/Logo'
+import config from '@/config'
 
 export default function Home() {
   return (
@@ -17,13 +18,13 @@ export default function Home() {
             </div>
           </div>
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-6 text-gray-900">
-            Evolv
+            {config.appName}
           </h1>
           <p className="text-xl sm:text-2xl text-gray-600 mb-6">
-            Your prompts, but smarter every week
+            {config.appDescription}
           </p>
           <p className="text-base sm:text-lg text-gray-500 mb-10 max-w-2xl mx-auto">
-            Extract DNA from prompts, track mutations, understand lineage. Transform prompt sprawl into organized, versioned templates.
+            {config.appFullDescription}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/dashboard">
@@ -45,17 +46,16 @@ export default function Home() {
               <div className="w-10 h-10 rounded bg-blue-50 flex items-center justify-center mb-3">
                 <Database className="h-5 w-5 text-blue-600" />
               </div>
-              <CardTitle className="text-lg mb-1">Prompt Genome</CardTitle>
+              <CardTitle className="text-lg mb-1">{config.features.promptGenome.title}</CardTitle>
               <CardDescription>
-                Extract DNA, track mutations, understand lineage
+                {config.features.promptGenome.description}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <ul className="space-y-2 text-sm text-gray-600">
-                <li>• Structural parsing</li>
-                <li>• Variable detection</li>
-                <li>• Instruction extraction</li>
-                <li>• Semantic embeddings</li>
+                {config.features.promptGenome.items.map((item, idx) => (
+                  <li key={idx}>• {item}</li>
+                ))}
               </ul>
             </CardContent>
           </Card>
@@ -65,17 +65,16 @@ export default function Home() {
               <div className="w-10 h-10 rounded bg-green-50 flex items-center justify-center mb-3">
                 <Zap className="h-5 w-5 text-green-600" />
               </div>
-              <CardTitle className="text-lg mb-1">Real-time Analysis</CardTitle>
+              <CardTitle className="text-lg mb-1">{config.features.realtimeAnalysis.title}</CardTitle>
               <CardDescription>
-                Continuous processing and family detection
+                {config.features.realtimeAnalysis.description}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <ul className="space-y-2 text-sm text-gray-600">
-                <li>• Automatic clustering</li>
-                <li>• Family detection</li>
-                <li>• Template synthesis</li>
-                <li>• Confidence scoring</li>
+                {config.features.realtimeAnalysis.items.map((item, idx) => (
+                  <li key={idx}>• {item}</li>
+                ))}
               </ul>
             </CardContent>
           </Card>
@@ -85,17 +84,16 @@ export default function Home() {
               <div className="w-10 h-10 rounded bg-purple-50 flex items-center justify-center mb-3">
                 <GitBranch className="h-5 w-5 text-purple-600" />
               </div>
-              <CardTitle className="text-lg mb-1">Evolution Tracking</CardTitle>
+              <CardTitle className="text-lg mb-1">{config.features.evolutionTracking.title}</CardTitle>
               <CardDescription>
-                Monitor prompt changes and drift detection
+                {config.features.evolutionTracking.description}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <ul className="space-y-2 text-sm text-gray-600">
-                <li>• Mutation detection</li>
-                <li>• Drift alerts</li>
-                <li>• Lineage graphs</li>
-                <li>• Version control</li>
+                {config.features.evolutionTracking.items.map((item, idx) => (
+                  <li key={idx}>• {item}</li>
+                ))}
               </ul>
             </CardContent>
           </Card>

@@ -6,6 +6,7 @@ import LiveLogs from '@/components/LiveLogs'
 import ConnectionTest from '@/components/ConnectionTest'
 import { LogEntry } from '@/types/log'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import config from '@/config'
 
 export default function LogsPage() {
   const [recentLogs, setRecentLogs] = useState<LogEntry[]>([])
@@ -28,7 +29,7 @@ export default function LogsPage() {
         <div className="mb-6">
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">Log Generator</h1>
           <p className="text-muted-foreground text-base sm:text-lg">
-            Generate prompt logs for Portkey observability and Evolv analysis
+            Generate prompt logs for Portkey observability and {config.appName} analysis
           </p>
         </div>
 

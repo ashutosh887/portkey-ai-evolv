@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { api, Stats, Family, Prompt } from '@/lib/api'
 import { Database, Users, FileText, TrendingUp, RefreshCw, Zap, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
+import toast from 'react-hot-toast'
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null)
@@ -28,7 +29,9 @@ export default function DashboardPage() {
       setFamilies(familiesData.families)
       setRecentPrompts(promptsData.prompts)
     } catch (err: any) {
-      setError(err.message || 'Failed to load data')
+      const errorMessage = err.message || 'Failed to load data'
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -37,10 +40,13 @@ export default function DashboardPage() {
   const handleProcess = async () => {
     setProcessing(true)
     try {
-      await api.process(100)
+      const result = await api.process(100)
+      toast.success(`Processed ${result.processed} prompts`)
       await loadData()
     } catch (err: any) {
-      setError(err.message || 'Failed to process prompts')
+      const errorMessage = err.message || 'Failed to process prompts'
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setProcessing(false)
     }

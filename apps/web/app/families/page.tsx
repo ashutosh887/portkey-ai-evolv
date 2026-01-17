@@ -24,7 +24,9 @@ export default function FamiliesPage() {
       setFamilies(data.families)
       setTotal(data.total)
     } catch (err: any) {
-      setError(err.message || 'Failed to load families')
+      const errorMessage = err.message || 'Failed to load families'
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }

@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Book, Code, Settings } from 'lucide-react'
 import Link from 'next/link'
+import config from '@/config'
 
 export default function DocsPage() {
   return (
@@ -19,7 +20,7 @@ export default function DocsPage() {
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-4">Documentation</h1>
           <p className="text-lg text-muted-foreground">
-            Learn how to use Evolv to manage and analyze your prompts
+            Learn how to use {config.appName} to manage and analyze your prompts
           </p>
         </div>
 
