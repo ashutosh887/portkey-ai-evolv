@@ -41,7 +41,8 @@ class PromptInstance(Base):
     prompt_id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     original_text = Column(Text, nullable=False)
     normalized_text = Column(Text, index=True)
-    dedup_hash = Column(String, index=True) # Hash of normalized text
+    dedup_hash = Column(String, index=True) # SHA256 hash of normalized text
+    simhash = Column(String, index=True)   # 64-bit SimHash fingerprint as hex string
     
     embedding_vector = Column(JSON)  # Vector stored as JSON
     similarity_score = Column(Float)

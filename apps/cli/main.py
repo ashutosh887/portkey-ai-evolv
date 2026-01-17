@@ -23,6 +23,36 @@ def ingest(
 
 
 @app.command()
+def prompts(limit: int = 20):
+    """List latest ingested prompts"""
+    from packages.storage.database import get_db
+    from packages.storage.repositories import PromptRepository
+    
+    db_gen = get_db()
+    db = next(db_gen)
+    try:
+        repo = PromptRepository(db)
+        prompts = repo.get_latest(limit=limit)
+        
+        if not prompts:
+            typer.echo("No prompts found in database.")
+            return
+
+        typer.echo(f"Found {len(prompts)} prompts:")
+        typer.echo("-" * 50)
+        for p in prompts:
+            typer.echo(f"ID: {p.prompt_id}")
+            typer.echo(f"Created: {p.created_at}")
+            typer.echo(f"Text: {p.original_text[:100]}...")
+            typer.echo("-" * 50)
+    finally:
+        try:
+            next(db_gen)
+        except StopIteration:
+            pass
+
+
+@app.command()
 def run():
     """Process pending prompts (clustering, template extraction)"""
     typer.echo("Processing pending prompts...")
@@ -76,6 +106,24 @@ def stats():
     typer.echo("  Prompts: 0")
     typer.echo("  Families: 0")
     typer.echo("  Templates: 0")
+
+
+@app.command("portkey-worker")
+def portkey_worker(
+    interval: int = typer.Option(10, help="Ingestion interval in minutes"),
+):
+    """
+    Run the Portkey ingestion background worker.
+    Fetches logs every X minutes (default: 10).
+    """
+    import asyncio
+    from packages.ingestion.worker import run_worker
+    
+    typer.echo(f"🚀 Starting Portkey Ingestion Worker (every {interval} min)...")
+    try:
+        asyncio.run(run_worker(interval_minutes=interval))
+    except KeyboardInterrupt:
+        typer.echo("\n🛑 Worker stopped.")
 
 
 if __name__ == "__main__":

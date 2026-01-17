@@ -1,5 +1,5 @@
 """
-Prompt normalization and deduplication
+Prompt normalization and deduplication utilities
 """
 
 import hashlib
@@ -9,7 +9,13 @@ from typing import Dict, Any
 
 def normalize_text(text: str) -> str:
     """
-    Normalize prompt text for comparison
+    Normalize prompt text for comparison and deduplication.
+    
+    Steps:
+    1. Convert to lowercase
+    2. Remove punctuation (keep alphanumeric and whitespace)
+    3. Collapse multiple whitespace to single space
+    4. Strip leading/trailing whitespace
     
     Args:
         text: Raw prompt text
@@ -17,25 +23,30 @@ def normalize_text(text: str) -> str:
     Returns:
         Normalized text
     """
+    # Convert to lowercase
+    text = text.lower()
+    
+    # Remove punctuation (keep only alphanumeric and whitespace)
+    text = re.sub(r'[^\w\s]', '', text)
+    
+    # Collapse multiple whitespace to single space
     text = re.sub(r'\s+', ' ', text)
-    text = text.strip()
-    text = re.sub(r'\r\n', '\n', text)
-    text = re.sub(r'\r', '\n', text)
-    return text
+    
+    # Strip leading/trailing whitespace
+    return text.strip()
 
 
 def compute_hash(text: str) -> str:
     """
-    Compute SHA256 hash for deduplication
+    Compute SHA256 hash of normalized text for exact deduplication.
     
     Args:
-        text: Normalized text
+        text: Text to hash (should already be normalized)
     
     Returns:
         Hex digest of hash
     """
-    normalized = normalize_text(text)
-    return hashlib.sha256(normalized.encode('utf-8')).hexdigest()
+    return hashlib.sha256(text.encode('utf-8')).hexdigest()
 
 
 def extract_metadata(source: str, data: Dict[str, Any]) -> Dict[str, Any]:

@@ -3,21 +3,13 @@ Core domain models and business logic
 """
 
 from packages.core.models import (
-    PromptDNA,
+    PromptInstance,
     PromptFamily,
-    PromptStructure,
-    PromptVariables,
-    PromptInstructions,
-    CanonicalTemplate,
+    Template,
 )
-from packages.core.processing import ProcessingService
 
 __all__ = [
-    "PromptDNA",
+    "PromptInstance",
     "PromptFamily",
-    "PromptStructure",
-    "PromptVariables",
-    "PromptInstructions",
-    "CanonicalTemplate",
-    "ProcessingService",
+    "Template",
 ]

@@ -4,15 +4,13 @@ Storage layer with SQLite and repositories
 
 from packages.storage.database import get_db, engine, Base, SessionLocal
 from packages.storage.models import (
-    PromptModel,
-    FamilyModel,
-    LineageModel,
-    ProcessingLogModel,
+    PromptFamily,
+    PromptInstance,
+    Template,
 )
 from packages.storage.repositories import (
     PromptRepository,
     FamilyRepository,
-    LineageRepository,
 )
 
 __all__ = [
@@ -20,11 +18,9 @@ __all__ = [
     "engine",
     "Base",
     "SessionLocal",
-    "PromptModel",
-    "FamilyModel",
-    "LineageModel",
-    "ProcessingLogModel",
+    "PromptFamily",
+    "PromptInstance",
+    "Template",
     "PromptRepository",
     "FamilyRepository",
-    "LineageRepository",
 ]

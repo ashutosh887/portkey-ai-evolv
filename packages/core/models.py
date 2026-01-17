@@ -32,6 +32,7 @@ class PromptInstance(BaseModel):
     original_text: str
     normalized_text: Optional[str] = None
     dedup_hash: Optional[str] = None
+    simhash: Optional[str] = None  # 64-bit SimHash fingerprint as hex string
     
     embedding_vector: Optional[List[float]] = None
     similarity_score: Optional[float] = None

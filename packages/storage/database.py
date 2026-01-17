@@ -32,3 +32,14 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def init_db():
+    """Create all database tables"""
+    # Import models to ensure they are registered with Base
+    from packages.storage import models  # noqa: F401
+    Base.metadata.create_all(bind=engine)
+
+
+# Auto-create tables on import
+init_db()
