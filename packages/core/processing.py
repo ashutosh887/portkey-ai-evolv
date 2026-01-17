@@ -1,8 +1,5 @@
-"""
-Core processing service that orchestrates the pipeline
-"""
-
 import uuid
+import logging
 from typing import List, Optional, Any
 
 from packages.core.models import PromptDNA, CanonicalTemplate
@@ -12,9 +9,10 @@ from packages.llm import MockLLMClient, LLMClient
 from packages.storage import PromptRepository, FamilyRepository
 from packages.ingestion import normalize_text, compute_hash
 
+logger = logging.getLogger(__name__)
+
 
 def _model_to_dna(model: Any) -> PromptDNA:
-    """Build a PromptDNA from a PromptInstance ORM model (for batch and classify)."""
     dna = extract_dna(model.original_text, model.metadata_ or {})
     dna.id = model.prompt_id
     dna.embedding = list(model.embedding_vector) if model.embedding_vector else []
@@ -22,28 +20,52 @@ def _model_to_dna(model: Any) -> PromptDNA:
 
 
 class ProcessingService:
-    """Orchestrates the prompt processing pipeline"""
-
     def __init__(
         self,
         prompt_repo: PromptRepository,
         family_repo: FamilyRepository,
-        use_mock_llm: bool = True,
+        use_mock_llm: bool = False,
     ):
         self.prompt_repo = prompt_repo
         self.family_repo = family_repo
         self.embedding_service = EmbeddingService()
-        self.llm_client = MockLLMClient() if use_mock_llm else LLMClient()
+        self.use_mock_llm = use_mock_llm
+        
+        if use_mock_llm:
+            self.llm_client = MockLLMClient()
+            self.fallback_client = None
+        else:
+            try:
+                self.llm_client = LLMClient()
+                self.fallback_client = MockLLMClient()
+            except Exception as e:
+                logger.warning(f"Failed to initialize LLMClient, using MockLLMClient: {e}")
+                self.llm_client = MockLLMClient()
+                self.fallback_client = None
+
+    async def _extract_template_with_fallback(self, cluster_prompts: List[PromptDNA]) -> CanonicalTemplate:
+        try:
+            return await self.llm_client.extract_template(cluster_prompts)
+        except Exception as e:
+            logger.warning(f"LLM template extraction failed, using fallback: {e}")
+            if self.fallback_client:
+                return await self.fallback_client.extract_template(cluster_prompts)
+            raise
+
+    async def _generate_explanation_with_fallback(self, cluster_prompts: List[PromptDNA]) -> str:
+        try:
+            return await self.llm_client.generate_explanation(cluster_prompts)
+        except Exception as e:
+            logger.warning(f"LLM explanation generation failed, using fallback: {e}")
+            if self.fallback_client:
+                return await self.fallback_client.generate_explanation(cluster_prompts)
+            return f"This family contains {len(cluster_prompts)} prompts with similar semantic structure."
 
     async def process_raw_prompt(
         self,
         raw_text: str,
         metadata: Optional[dict] = None,
     ) -> PromptDNA:
-        """
-        Process a raw prompt: normalize, dedup by hash, extract DNA, embed, store.
-        Preserves raw_text in DB when provided via original_text_override.
-        """
         normalized = normalize_text(raw_text)
         prompt_hash = compute_hash(normalized)
 
@@ -61,10 +83,6 @@ class ProcessingService:
         return prompt_dna
 
     async def process_batch(self, limit: int = 100) -> dict:
-        """
-        Process pending prompts: fill missing embeddings, cluster, create families
-        and templates, assign family_id to prompts.
-        """
         pending = self.prompt_repo.get_pending(limit)
         if not pending:
             return {"processed": 0, "families_created": 0, "families_updated": 0}
@@ -83,8 +101,9 @@ class ProcessingService:
         for cluster_id, prompt_ids in clusters.items():
             cluster_prompts = [p for p in prompt_dnas if p.id in prompt_ids]
             family_id = f"family-{uuid.uuid4().hex[:8]}"
-            template: CanonicalTemplate = await self.llm_client.extract_template(cluster_prompts)
-            description = await self.llm_client.generate_explanation(cluster_prompts)
+            
+            template = await self._extract_template_with_fallback(cluster_prompts)
+            description = await self._generate_explanation_with_fallback(cluster_prompts)
 
             self.family_repo.create_family(
                 family_id=family_id,
@@ -110,10 +129,6 @@ class ProcessingService:
         }
 
     async def classify_new_prompt(self, prompt_dna: PromptDNA) -> tuple[str, Optional[str], float]:
-        """
-        Classify a new prompt against existing families.
-        Returns (classification, family_id, confidence).
-        """
         families = self.family_repo.get_all()
         if not families:
             return ("new_family", None, 0.0)

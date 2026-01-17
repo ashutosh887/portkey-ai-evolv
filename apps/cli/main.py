@@ -29,7 +29,7 @@ def add(
     try:
         prompt_repo = PromptRepository(db)
         family_repo = FamilyRepository(db)
-        service = ProcessingService(prompt_repo=prompt_repo, family_repo=family_repo, use_mock_llm=True)
+        service = ProcessingService(prompt_repo=prompt_repo, family_repo=family_repo, use_mock_llm=False)
         dna = asyncio.run(service.process_raw_prompt(text))
         typer.echo(f"Added prompt id={dna.id}")
         typer.echo("✅ Done. Run 'genome run' to cluster into families.")
@@ -96,7 +96,7 @@ def ingest(
         try:
             prompt_repo = PromptRepository(db)
             family_repo = FamilyRepository(db)
-            service = ProcessingService(prompt_repo=prompt_repo, family_repo=family_repo, use_mock_llm=True)
+            service = ProcessingService(prompt_repo=prompt_repo, family_repo=family_repo, use_mock_llm=False)
             
             raw_data = asyncio.run(ingest_from_file(str(file_path)))
             
@@ -166,7 +166,7 @@ def run(limit: int = typer.Option(100, "--limit", "-l", help="Max pending prompt
     try:
         prompt_repo = PromptRepository(db)
         family_repo = FamilyRepository(db)
-        service = ProcessingService(prompt_repo=prompt_repo, family_repo=family_repo, use_mock_llm=True)
+        service = ProcessingService(prompt_repo=prompt_repo, family_repo=family_repo, use_mock_llm=False)
         result = asyncio.run(service.process_batch(limit=limit))
         typer.echo(f"  Processed: {result['processed']}")
         typer.echo(f"  Families created: {result['families_created']}")
@@ -278,7 +278,7 @@ def template(
     from packages.storage.database import get_db
     from packages.storage.repositories import FamilyRepository, TemplateRepository, PromptRepository
     from packages.core.processing import _model_to_dna
-    from packages.llm import MockLLMClient
+    from packages.llm import LLMClient, MockLLMClient
     
     db_gen = get_db()
     db = next(db_gen)
@@ -303,8 +303,13 @@ def template(
                     raise typer.Exit(1)
                 
                 prompt_dnas = [_model_to_dna(m) for m in members]
-                llm_client = MockLLMClient()
-                extracted = asyncio.run(llm_client.extract_template(prompt_dnas))
+                try:
+                    llm_client = LLMClient()
+                    extracted = asyncio.run(llm_client.extract_template(prompt_dnas))
+                except Exception:
+                    typer.echo("⚠️  Real LLM unavailable, using mock extraction")
+                    llm_client = MockLLMClient()
+                    extracted = asyncio.run(llm_client.extract_template(prompt_dnas))
                 
                 template_repo.create_template(
                     family_id=family_id,

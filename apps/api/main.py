@@ -13,7 +13,6 @@ from packages.core import ProcessingService
 from packages.ingestion.files import ingest_from_file
 from packages.ingestion.portkey import PortKeyIngestor
 from packages.core.processing import _model_to_dna
-from packages.llm import MockLLMClient
 
 app = FastAPI(
     title="Evolv API",
@@ -53,7 +52,7 @@ async def ingest_file(
 ):
     prompt_repo = PromptRepository(db)
     family_repo = FamilyRepository(db)
-    service = ProcessingService(prompt_repo=prompt_repo, family_repo=family_repo, use_mock_llm=True)
+    service = ProcessingService(prompt_repo=prompt_repo, family_repo=family_repo, use_mock_llm=False)
     
     with tempfile.NamedTemporaryFile(delete=False, suffix=file.filename) as tmp:
         content = await file.read()
@@ -285,8 +284,14 @@ async def extract_template(
     
     prompt_dnas = [_model_to_dna(m) for m in members]
     
-    llm_client = MockLLMClient()
-    template = await llm_client.extract_template(prompt_dnas)
+    from packages.llm import LLMClient
+    try:
+        llm_client = LLMClient()
+        template = await llm_client.extract_template(prompt_dnas)
+    except Exception as e:
+        from packages.llm import MockLLMClient
+        llm_client = MockLLMClient()
+        template = await llm_client.extract_template(prompt_dnas)
     
     template_repo.create_template(
         family_id=family_id,
@@ -404,7 +409,7 @@ async def process_pending(
 ):
     prompt_repo = PromptRepository(db)
     family_repo = FamilyRepository(db)
-    service = ProcessingService(prompt_repo=prompt_repo, family_repo=family_repo, use_mock_llm=True)
+    service = ProcessingService(prompt_repo=prompt_repo, family_repo=family_repo, use_mock_llm=False)
     
     result = await service.process_batch(limit=limit)
     
