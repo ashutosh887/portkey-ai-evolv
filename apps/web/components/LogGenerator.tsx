@@ -194,9 +194,9 @@ export default function LogGenerator({
             <ErrorDisplay error={error} />
           </div>
         )}
-        <div className="space-y-5">
+        <div className="space-y-4">
         <div>
-          <label className="block text-sm font-semibold mb-2">Prompt</label>
+          <label className="block text-sm font-medium mb-2">Prompt</label>
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
