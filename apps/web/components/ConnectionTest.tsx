@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
 import { generateLog } from '@/lib/portkey'
+import config from '@/config'
 
 export default function ConnectionTest() {
   const [testing, setTesting] = useState(false)
@@ -25,7 +26,7 @@ export default function ConnectionTest() {
         return
       }
 
-      const testResult = await generateLog('Test', 'gpt-4o-mini', false)
+      const testResult = await generateLog('Test', config.portkey.defaultModel, false)
 
       if (testResult.success) {
         setResult({

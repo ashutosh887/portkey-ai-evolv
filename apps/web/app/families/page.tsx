@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { api, Family } from '@/lib/api'
 import { Users, RefreshCw, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
+import config from '@/config'
 
 export default function FamiliesPage() {
   const [families, setFamilies] = useState<Family[]>([])
@@ -14,7 +15,7 @@ export default function FamiliesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState(1)
-  const limit = 20
+  const limit = config.pagination.listPages.default
 
   const loadFamilies = async () => {
     try {

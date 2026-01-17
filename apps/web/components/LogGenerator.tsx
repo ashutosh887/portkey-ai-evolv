@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import ErrorDisplay from './ErrorDisplay'
+import config from '@/config'
 
 interface LogGeneratorProps {
   onLogGenerated: (log: LogEntry) => void
@@ -14,39 +15,16 @@ interface LogGeneratorProps {
   setIsGenerating: (value: boolean) => void
 }
 
-const SAMPLE_PROMPTS = [
-  'What is AI?',
-  'Explain ML briefly',
-  'Define API',
-  'What is a prompt?',
-  'How does caching work?',
-  'What is observability?',
-  'Explain tokens',
-  'What is Portkey?',
-  'Define embedding',
-  'What is clustering?',
-  'Explain DNA extraction',
-  'What is lineage?',
-  'Define mutation',
-  'What is a template?',
-  'Explain evolution',
-  'What is a family?',
-  'Define similarity',
-  'What is drift?',
-  'Explain tracking',
-  'What is analysis?',
-]
-
 export default function LogGenerator({
   onLogGenerated,
   isGenerating,
   setIsGenerating,
 }: LogGeneratorProps) {
   const [prompt, setPrompt] = useState('')
-  const [model, setModel] = useState('gpt-4o-mini')
+  const [model, setModel] = useState(config.portkey.defaultModel)
   const [isAutoGenerating, setIsAutoGenerating] = useState(false)
-  const [generationRate, setGenerationRate] = useState(2)
-  const [useMock, setUseMock] = useState(process.env.NEXT_PUBLIC_MOCK_MODE === 'true')
+  const [generationRate, setGenerationRate] = useState(config.logs.defaultAutoGenerationRate)
+  const [useMock, setUseMock] = useState(config.portkey.mockMode)
   const [error, setError] = useState<string | null>(null)
   const autoGenRef = useRef(false)
 
@@ -117,8 +95,8 @@ export default function LogGenerator({
 
     const generateLoop = async () => {
       while (autoGenRef.current) {
-        const randomIndex = Math.floor(Math.random() * SAMPLE_PROMPTS.length)
-        const randomPrompt = SAMPLE_PROMPTS[randomIndex]
+        const randomIndex = Math.floor(Math.random() * config.samplePrompts.length)
+        const randomPrompt = config.samplePrompts[randomIndex]
         setPrompt(randomPrompt)
         
         setIsGenerating(true)
@@ -175,7 +153,7 @@ export default function LogGenerator({
   }
 
   const handleSamplePrompt = () => {
-    const randomPrompt = SAMPLE_PROMPTS[Math.floor(Math.random() * SAMPLE_PROMPTS.length)]
+    const randomPrompt = config.samplePrompts[Math.floor(Math.random() * config.samplePrompts.length)]
     setPrompt(randomPrompt)
   }
 
@@ -222,8 +200,11 @@ export default function LogGenerator({
               className="w-full px-3 sm:px-4 py-2 border border-input bg-background rounded-md focus:ring-2 focus:ring-ring focus:ring-offset-2 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={useMock}
             >
-              <option value="gpt-4o-mini">GPT-4o Mini</option>
-              <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+              {config.portkey.models.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
             </select>
           </div>
           <div>
@@ -270,7 +251,7 @@ export default function LogGenerator({
               <input
                 type="range"
                 min="0.1"
-                max={useMock ? "30" : "10"}
+                max={useMock ? config.logs.maxAutoGenerationRate.toString() : "10"}
                 step="0.1"
                 value={generationRate}
                 onChange={(e) => setGenerationRate(parseFloat(e.target.value))}
@@ -279,7 +260,7 @@ export default function LogGenerator({
               />
               <div className="flex justify-between text-xs text-muted-foreground mt-1">
                 <span>0.1/s</span>
-                <span>{useMock ? "30/s" : "10/s"}</span>
+                <span>{useMock ? `${config.logs.maxAutoGenerationRate}/s` : "10/s"}</span>
               </div>
             </div>
             <Button

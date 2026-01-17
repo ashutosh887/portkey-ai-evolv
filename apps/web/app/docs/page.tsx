@@ -85,7 +85,7 @@ NEXT_PUBLIC_MOCK_MODE=false`}
     'x-portkey-debug': 'true'
   },
   body: JSON.stringify({
-    model: 'gpt-3.5-turbo',
+    model: config.portkey.models[1].value,
     messages: [{ role: 'user', content: 'Your prompt' }]
   })
 })`}

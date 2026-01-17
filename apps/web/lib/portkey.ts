@@ -1,4 +1,6 @@
-const PORTKEY_GATEWAY_URL = 'https://api.portkey.ai/v1'
+import config from '@/config'
+
+const PORTKEY_GATEWAY_URL = config.portkey.gatewayUrl
 
 const getPortkeyHeaders = () => {
   if (typeof window === 'undefined') {
@@ -14,7 +16,7 @@ const getPortkeyHeaders = () => {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'x-portkey-api-key': portkeyApiKey,
-    'x-portkey-provider': '@openai',
+    'x-portkey-provider': config.portkey.defaultProvider,
     'x-portkey-debug': 'true',
   }
 
@@ -31,27 +33,10 @@ const getPortkeyHeaders = () => {
   return headers
 }
 
-const MOCK_MODE = process.env.NEXT_PUBLIC_MOCK_MODE === 'true'
+const MOCK_MODE = config.portkey.mockMode
 
 const generateMockResponse = (prompt: string) => {
-  const shortResponses = [
-    'AI is artificial intelligence.',
-    'ML is machine learning.',
-    'API is application programming interface.',
-    'A prompt is an input instruction.',
-    'Caching stores data for faster access.',
-    'Observability is monitoring system behavior.',
-    'Tokens are text units.',
-    'Portkey is an AI gateway.',
-    'Embedding is a vector representation.',
-    'Clustering groups similar items.',
-    'DNA extraction identifies core components.',
-    'Lineage tracks evolution history.',
-    'Mutation is a change or variation.',
-    'Template is a reusable pattern.',
-    'Evolution is gradual change over time.',
-  ]
-  return shortResponses[Math.floor(Math.random() * shortResponses.length)]
+  return config.mockResponses[Math.floor(Math.random() * config.mockResponses.length)]
 }
 
 export interface GenerateLogResult {
@@ -73,7 +58,7 @@ export interface GenerateLogResult {
 
 export const generateLog = async (
   prompt: string,
-  model: string = 'gpt-3.5-turbo',
+  model: string = config.portkey.defaultModel,
   useMock: boolean = false
 ): Promise<GenerateLogResult> => {
   const startTime = Date.now()
@@ -104,7 +89,7 @@ export const generateLog = async (
     }
   }
 
-  const fastModel = 'gpt-4o-mini'
+  const fastModel = config.portkey.fastModel
   const headers = getPortkeyHeaders()
 
   console.log('[Portkey] Request Details:', {
@@ -245,7 +230,7 @@ export const generateLog = async (
 
 export const generateBatchLogs = async (
   prompts: string[],
-  model: string = 'gpt-3.5-turbo',
+  model: string = config.portkey.defaultModel,
   delay: number = 1000,
   useMock: boolean = false
 ) => {

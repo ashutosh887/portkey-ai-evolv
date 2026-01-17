@@ -14,12 +14,12 @@ export default function LogsPage() {
   const [totalGenerated, setTotalGenerated] = useState(0)
 
   const handleLogGenerated = useCallback((log: LogEntry) => {
-    setRecentLogs((prev) => [log, ...prev].slice(0, 50))
+    setRecentLogs((prev) => [log, ...prev].slice(0, config.logs.maxDisplayed))
     setTotalGenerated((prev) => prev + 1)
   }, [])
   
   const handleReplay = useCallback((replayedLog: LogEntry) => {
-    setRecentLogs((prev) => [replayedLog, ...prev].slice(0, 50))
+    setRecentLogs((prev) => [replayedLog, ...prev].slice(0, config.logs.maxDisplayed))
     setTotalGenerated((prev) => prev + 1)
   }, [])
 

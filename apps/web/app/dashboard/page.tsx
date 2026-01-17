@@ -8,6 +8,7 @@ import { api, Stats, Family, Prompt } from '@/lib/api'
 import { Database, Users, FileText, TrendingUp, RefreshCw, Zap, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
+import config from '@/config'
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null)
@@ -22,8 +23,8 @@ export default function DashboardPage() {
       setError(null)
       const [statsData, familiesData, promptsData] = await Promise.all([
         api.stats(),
-        api.families({ limit: 5, sort: 'created_at' }),
-        api.prompts({ limit: 5 }),
+        api.families({ limit: config.pagination.dashboard.recentFamilies, sort: 'created_at' }),
+        api.prompts({ limit: config.pagination.dashboard.recentPrompts }),
       ])
       setStats(statsData)
       setFamilies(familiesData.families)
@@ -40,7 +41,7 @@ export default function DashboardPage() {
   const handleProcess = async () => {
     setProcessing(true)
     try {
-      const result = await api.process(100)
+      const result = await api.process(config.processing.batchSize)
       toast.success(`Processed ${result.processed} prompts`)
       await loadData()
     } catch (err: any) {
@@ -54,7 +55,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     loadData()
-    const interval = setInterval(loadData, 30000)
+    const interval = setInterval(loadData, config.processing.autoRefreshInterval)
     return () => clearInterval(interval)
   }, [])
 

@@ -8,6 +8,7 @@ import { api, Prompt } from '@/lib/api'
 import { Database, RefreshCw, AlertCircle, Link as LinkIcon } from 'lucide-react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
+import config from '@/config'
 
 export default function PromptsPage() {
   const [prompts, setPrompts] = useState<Prompt[]>([])
@@ -15,7 +16,7 @@ export default function PromptsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState(1)
-  const limit = 20
+  const limit = config.pagination.listPages.default
 
   const loadPrompts = async () => {
     try {
