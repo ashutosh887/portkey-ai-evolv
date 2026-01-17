@@ -1,4 +1,4 @@
-# 🛠️ Setup Guide
+# Setup Guide
 
 Quick setup instructions to get Evolv running locally.
 
@@ -40,29 +40,14 @@ This will:
 - Install all dependencies from `pyproject.toml`
 - Set up the project in editable mode
 
-### 3. Activate Virtual Environment
-
-```bash
-# macOS/Linux
-source .venv/bin/activate
-
-# Windows
-.venv\Scripts\activate
-```
-
-Or use UV directly (no activation needed):
-```bash
-uv run <command>
-```
-
-### 4. Configure Environment
+### 3. Configure Environment
 
 ```bash
 cp .env.example .env
 # Edit .env with your API keys
 ```
 
-### 5. Initialize Database
+### 4. Initialize Database
 
 ```bash
 uv run python scripts/init_db.py
@@ -100,30 +85,26 @@ You should see all available commands.
 ### Run API with Auto-reload
 
 ```bash
-make run-api
-# or
 uv run uvicorn apps.api.main:app --reload
 ```
 
 ### Run Tests
 
 ```bash
-make test
-# or
 uv run pytest
 ```
 
 ### Code Quality
 
 ```bash
-# Format
-make format
+# Format code
+uv run black .
 
 # Lint
-make lint
+uv run ruff check .
 
 # Type check
-make type-check
+uv run mypy .
 ```
 
 ---
@@ -149,18 +130,6 @@ evolv/
 
 ---
 
-## Next Steps
-
-1. ✅ Setup complete
-2. 🔄 Implement ingestion layer
-3. 🧬 Implement DNA extraction
-4. 🧪 Implement clustering
-5. 🤖 Implement LLM template extraction
-6. 📈 Implement evolution tracking
-7. 🚀 Deploy!
-
----
-
 ## Troubleshooting
 
 ### UV not found
@@ -170,16 +139,15 @@ evolv/
 ### Import errors
 - Ensure you're in the project root
 - Run `uv sync` again
-- Check virtual environment is activated
 
 ### Database errors
 - Run `uv run python scripts/init_db.py`
 - Check `data/` directory exists and is writable
 
 ### Port already in use
-- Change port: `uvicorn apps.api.main:app --port 8001`
+- Change port: `uv run uvicorn apps.api.main:app --port 8001`
 - Or kill process on port 8000
 
 ---
 
-**Ready to build!** 🚀
+**Ready to build!**

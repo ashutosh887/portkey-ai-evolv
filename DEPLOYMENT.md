@@ -1,4 +1,4 @@
-# 🚀 Deployment Guide
+# Deployment Guide
 
 This guide covers deploying Evolv to various platforms.
 
@@ -19,8 +19,8 @@ This guide covers deploying Evolv to various platforms.
 
 3. **Deploy**
    - Railway auto-detects Dockerfile
-   - Or set build command: `uv sync`
-   - Set start command: `uvicorn apps.api.main:app --host 0.0.0.0 --port $PORT`
+   - Or set build command: `uv sync --frozen`
+   - Set start command: `uv run uvicorn apps.api.main:app --host 0.0.0.0 --port $PORT`
 
 4. **Done!**
    - Get public URL
@@ -58,8 +58,8 @@ This guide covers deploying Evolv to various platforms.
 
 1. **New Web Service**
    - Connect GitHub repository
-   - Build Command: `uv sync`
-   - Start Command: `uvicorn apps.api.main:app --host 0.0.0.0 --port $PORT`
+   - Build Command: `uv sync --frozen`
+   - Start Command: `uv run uvicorn apps.api.main:app --host 0.0.0.0 --port $PORT`
 
 2. **Environment Variables**
    - Add all variables from `.env.example`
@@ -116,10 +116,10 @@ Optional:
 
 ### SQLite (Default)
 
-- ✅ Simple, no setup
-- ✅ Works for demos
-- ⚠️ Not ideal for production scale
-- ⚠️ Single-writer limitation
+- Simple, no setup
+- Works for demos
+- Not ideal for production scale
+- Single-writer limitation
 
 ### PostgreSQL (Production)
 
@@ -163,7 +163,7 @@ All platforms should check:
 - Consider PostgreSQL for multi-instance
 
 ### Missing Dependencies
-- Ensure `uv sync` runs during build
+- Ensure `uv sync --frozen` runs during build
 - Check `pyproject.toml` dependencies
 
 ---
@@ -171,7 +171,7 @@ All platforms should check:
 ## Production Checklist
 
 - [ ] Environment variables configured
-- [ ] Database initialized (`scripts/init_db.py`)
+- [ ] Database initialized (`uv run python scripts/init_db.py`)
 - [ ] Health check endpoint working
 - [ ] Logging configured
 - [ ] Error handling tested
@@ -180,4 +180,4 @@ All platforms should check:
 
 ---
 
-**Ready to deploy!** 🚀
+**Ready to deploy!**
