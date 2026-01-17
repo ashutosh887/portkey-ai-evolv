@@ -209,14 +209,18 @@ Prompts are now production infrastructure. They evolve, mutate, and accumulate t
 ## Roadmap
 
 - [x] Project skeleton
-- [ ] Ingestion layer (Portkey, files, git)
-- [ ] DNA extraction engine
-- [ ] Clustering & family detection
-- [ ] Template synthesis (LLM)
-- [ ] Evolution tracking
-- [ ] REST API endpoints
-- [ ] CLI interface
-- [ ] Web dashboard (optional)
+- [x] Ingestion layer (Portkey, files, normalization, deduplication)
+- [x] DNA extraction engine (structure, variables, instructions)
+- [x] Embedding generation (sentence-transformers)
+- [x] Clustering & family detection (HDBSCAN)
+- [x] ML Core pipeline (offline batch processing)
+- [x] Database models and repositories
+- [x] Web log generator (Next.js)
+- [ ] Template synthesis (LLM integration - partial)
+- [ ] Evolution tracking (lineage, mutations)
+- [ ] REST API endpoints (structure exists, needs implementation)
+- [ ] CLI interface (structure exists, needs implementation)
+- [ ] Web dashboard for visualization (optional)
 - [ ] Production deployment
 
 ---
