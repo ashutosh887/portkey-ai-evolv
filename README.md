@@ -1,58 +1,18 @@
 # Evolv
 
-> **Your prompts, but smarter every week.**
+> Your prompts, but smarter every week.
 
----
+Evolv treats prompts like genetic sequences—extracting their DNA, tracking mutations, and understanding lineage. Transform prompt sprawl into organized, versioned templates with automatic family detection and evolution tracking.
 
-## What This Is
+## What It Does
 
-Evolv (The Prompt Genome Project) ingests real-world prompts from production systems,
-extracts their "DNA" (structure, variables, constraints), clusters them into prompt families,
-and tracks how they evolve over time.
+Evolv ingests prompts from production systems, extracts their structural DNA (variables, constraints, instructions), clusters them into semantic families, and tracks how they evolve over time. It provides:
 
-**Transform prompt sprawl into:**
-- Canonical templates with automatic extraction
-- Clear lineage and evolution tracking
-- Explainable grouping with confidence scores
-- Continuous, incremental processing
-- Deep integration with Portkey observability
-
----
-
-## Key Capabilities
-
-- **Prompt DNA Extraction** – Structural parsing, variable detection, instruction extraction
-- **Automatic Family Detection** – HDBSCAN-based semantic clustering
+- **Automatic DNA Extraction** – Parse structure, detect variables, extract instructions
+- **Semantic Clustering** – Group similar prompts into families using embeddings
 - **Template Synthesis** – LLM-powered canonical template extraction
-- **Evolution Tracking** – Mutation detection, drift alerts, lineage graphs
-- **Full Explainability** – Every grouping has reasoning and confidence scores
-- **Continuous Processing** – Incremental updates, no full reprocessing
-- **Portkey Integration** – Ingest from logs, trace all LLM calls
-
----
-
-## Architecture Overview
-
-```
-evolv/
-├── apps/
-│   ├── api/          # FastAPI service (deployable)
-│   ├── cli/          # Typer CLI (demo + operations)
-│   └── web/          # Next.js log generator app
-│
-├── packages/
-│   ├── core/         # Domain models & business logic
-│   ├── ingestion/    # Portkey logs, file uploads, git scanning
-│   ├── dna_extractor/# Prompt DNA extraction engine
-│   ├── clustering/   # Similarity computation & HDBSCAN
-│   ├── llm/          # Portkey abstraction & LLM orchestration
-│   └── storage/      # SQLite & repository pattern
-│
-├── infra/            # Docker, deployment configs
-└── scripts/          # One-off jobs & utilities
-```
-
----
+- **Evolution Tracking** – Monitor mutations, track lineage, detect drift
+- **Portkey Integration** – Ingest from observability logs, orchestrate LLM calls
 
 ## Quick Start
 
@@ -64,7 +24,6 @@ evolv/
 ### Installation
 
 ```bash
-# Install dependencies
 uv sync
 ```
 
@@ -74,36 +33,19 @@ uv sync
 uv run uvicorn apps.api.main:app --reload
 ```
 
-API will be available at `http://localhost:8000`
-- Health check: `http://localhost:8000/health`
-- API docs: `http://localhost:8000/docs`
+API available at `http://localhost:8000` with docs at `/docs`.
 
 ### Use the CLI
 
 ```bash
-# Ingest prompts from a file
-uv run genome ingest data/prompts.json
-
-# Process pending prompts
-uv run genome run
-
-# List all prompt families
-uv run genome families
-
-# Show family details
-uv run genome family <family_id>
-
-# Show canonical template
-uv run genome template <family_id>
-
-# Show evolution chain
-uv run genome evolve <prompt_id>
-
-# System statistics
-uv run genome stats
+uv run genome ingest data/prompts.json  # Ingest prompts
+uv run genome run                        # Process pending
+uv run genome families                  # List families
+uv run genome evolve <prompt_id>        # Show evolution chain
+uv run genome stats                     # System statistics
 ```
 
-### Run the Web App (Log Generator)
+### Run the Web App
 
 ```bash
 cd apps/web
@@ -111,123 +53,28 @@ npm install
 npm run dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000) to generate logs that will be sent to Portkey observability.
+Visit `http://localhost:3000` for the dashboard and log generator.
 
----
+## Architecture
 
-## Development
-
-### Project Structure
-
-- **apps/api** – FastAPI application with REST endpoints
-- **apps/cli** – Command-line interface for operations
-- **apps/web** – Next.js log generator application
-- **packages/core** – Shared domain models and types
-- **packages/ingestion** – Data ingestion from various sources
-- **packages/dna_extractor** – Prompt structure analysis
-- **packages/clustering** – Semantic similarity and clustering
-- **packages/llm** – LLM calls via Portkey with fallbacks
-- **packages/storage** – Database layer and repositories
-
-### Running Tests
-
-```bash
-uv run pytest
-```
-
-### Code Quality
-
-```bash
-# Format code
-uv run black .
-
-# Lint
-uv run ruff check .
-
-# Type check
-uv run mypy .
-```
-
----
-
-## Deployment
-
-The API is designed to be deployed as a single service.
-
-### Docker
-
-```bash
-# Build
-docker build -f infra/Dockerfile -t evolv .
-
-# Run
-docker run -p 8000:8000 evolv
-```
-
-The Dockerfile uses UV for dependency management and runs the API with `uv run`.
-
-### Recommended Platforms
-
-- **Railway** – One-click deploy, SQLite support
-- **Fly.io** – Global edge deployment
-- **Render** – Simple Docker deploys
-
-See `infra/` directory for deployment configurations.
-
----
+Monorepo structure with:
+- **apps/api** – FastAPI REST service
+- **apps/cli** – Command-line interface
+- **apps/web** – Next.js dashboard
+- **packages/** – Core logic (ingestion, DNA extraction, clustering, storage)
 
 ## Environment Variables
 
-Copy `.env.example` to `.env` and configure:
+Copy `.env.example` to `.env`:
 
 ```bash
-# Portkey API
 PORTKEY_API_KEY=your_key_here
-PORTKEY_VIRTUAL_KEY=your_virtual_key
-
-# OpenAI (fallback)
-OPENAI_API_KEY=your_key_here
-
-# Database
 DATABASE_URL=sqlite:///./data/genome.db
 ```
 
----
-
 ## Why This Matters
 
-Prompts are now production infrastructure. They evolve, mutate, and accumulate technical debt just like code.
-
-**Evolv makes them:**
-- Observable (see what you're actually using)
-- Versioned (track changes over time)
-- Governable (detect drift, enforce standards)
-- Optimizable (find duplicates, extract templates)
-
----
-
-## Roadmap
-
-- [x] Project skeleton
-- [x] Ingestion layer (Portkey, files, normalization, deduplication)
-- [x] DNA extraction engine (structure, variables, instructions)
-- [x] Embedding generation (sentence-transformers)
-- [x] Clustering & family detection (HDBSCAN)
-- [x] ML Core pipeline (offline batch processing)
-- [x] Database models and repositories
-- [x] Web log generator (Next.js)
-- [ ] Template synthesis (LLM integration - partial)
-- [ ] Evolution tracking (lineage, mutations)
-- [ ] REST API endpoints (structure exists, needs implementation)
-- [ ] CLI interface (structure exists, needs implementation)
-- [ ] Web dashboard for visualization (optional)
-- [ ] Production deployment
-
----
-
-## License
-
-MIT
+Prompts are production infrastructure. They evolve, mutate, and accumulate technical debt. Evolv makes them observable, versioned, and governable.
 
 ---
 
