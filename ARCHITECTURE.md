@@ -66,9 +66,31 @@ Evolv (Prompt Genome Project) is a monorepo-based system that ingests prompts fr
 │  └──────────────────────────────────────────────────────────────┘ │
 │                                                                     │
 │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────┐  │
-│  │   FastAPI REST    │  │   Typer CLI       │  │   Scheduler  │  │
-│  │   Endpoints       │  │   Commands        │  │   (Future)   │  │
+│  │   FastAPI REST    │  │   Typer CLI       │  │   Next.js    │  │
+│  │   Endpoints       │  │   Commands         │  │   Log Gen    │  │
 │  └──────────────────┘  └──────────────────┘  └──────────────┘  │
+│                                                                     │
+│  ┌──────────────────────────────────────────────────────────────┐ │
+│  │              LOG GENERATION (Next.js App)                    │ │
+│  │  • Manual prompt generation                                   │ │
+│  │  • Auto-generation (configurable rate)                        │ │
+│  │  • Real-time log display                                      │ │
+│  │  • Portkey SDK integration                                    │ │
+│  └───────────────────────┬──────────────────────────────────────┘ │
+│                          │                                          │
+│                          ▼                                          │
+│  ┌──────────────────────────────────────────────────────────────┐ │
+│  │              PORTKEY OBSERVABILITY                             │ │
+│  │  • Logs stored in Portkey                                     │ │
+│  │  • Available via Portkey API                                  │ │
+│  └───────────────────────┬──────────────────────────────────────┘ │
+│                          │                                          │
+│                          ▼                                          │
+│  ┌──────────────────────────────────────────────────────────────┐ │
+│  │              EVOLV INGESTION                                  │ │
+│  │  • Fetch logs from Portkey API                                │ │
+│  │  • Process through Evolv pipeline                             │ │
+│  └──────────────────────────────────────────────────────────────┘ │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -407,6 +429,26 @@ Your task:
 - `genome evolve <id>` - Evolution chain
 - `genome stats` - Statistics
 
+### 8. Web Application (`apps/web/`)
+
+**Responsibilities:**
+- Generate prompt logs via Portkey
+- Real-time log display
+- Auto-generation at configurable rates
+- Integration with Portkey SDK
+
+**Features:**
+- Manual log generation
+- Auto-generation (0.1 to 5 logs/second)
+- Recent logs display (latest 10)
+- Model selection (GPT-3.5, GPT-4, GPT-4 Turbo)
+- Sample prompts for testing
+
+**Flow:**
+```
+User Input → Portkey SDK → Portkey Observability → Evolv Ingestion
+```
+
 ---
 
 ## Processing Pipeline
@@ -465,11 +507,15 @@ For new prompts arriving after initial processing:
 ## Technology Stack
 
 ### Core Technologies
-- **Python 3.11+** - Language
+- **Python 3.11+** - Backend language
 - **FastAPI** - Web framework
 - **Typer** - CLI framework
 - **SQLAlchemy** - ORM
 - **SQLite** - Database (upgradeable to PostgreSQL)
+- **Next.js 14** - Web application framework
+- **TypeScript** - Type-safe frontend
+- **React** - UI library
+- **Tailwind CSS** - Styling
 
 ### ML/AI Libraries
 - **sentence-transformers** - Embeddings (local)
@@ -478,9 +524,10 @@ For new prompts arriving after initial processing:
 - **numpy** - Numerical operations
 
 ### Infrastructure
-- **UV** - Package manager
+- **UV** - Python package manager
+- **npm/yarn/pnpm** - Node.js package manager
 - **Docker** - Containerization
-- **Portkey** - LLM gateway (for production)
+- **Portkey** - LLM gateway and observability
 
 ---
 

@@ -37,7 +37,8 @@ and tracks how they evolve over time.
 evolv/
 ├── apps/
 │   ├── api/          # FastAPI service (deployable)
-│   └── cli/          # Typer CLI (demo + operations)
+│   ├── cli/          # Typer CLI (demo + operations)
+│   └── web/          # Next.js log generator app
 │
 ├── packages/
 │   ├── core/         # Domain models & business logic
@@ -102,6 +103,16 @@ uv run genome evolve <prompt_id>
 uv run genome stats
 ```
 
+### Run the Web App (Log Generator)
+
+```bash
+cd apps/web
+npm install
+npm run dev
+```
+
+Visit [http://localhost:3000](http://localhost:3000) to generate logs that will be sent to Portkey observability.
+
 ---
 
 ## Development
@@ -110,6 +121,7 @@ uv run genome stats
 
 - **apps/api** – FastAPI application with REST endpoints
 - **apps/cli** – Command-line interface for operations
+- **apps/web** – Next.js log generator application
 - **packages/core** – Shared domain models and types
 - **packages/ingestion** – Data ingestion from various sources
 - **packages/dna_extractor** – Prompt structure analysis
