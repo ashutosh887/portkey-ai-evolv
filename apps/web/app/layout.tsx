@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import './globals.css'
 import { Button } from '@/components/ui/button'
+import Logo from '@/components/Logo'
 
 export const metadata: Metadata = {
   title: 'Evolv - Your prompts, but smarter every week',
@@ -21,9 +22,7 @@ export default function RootLayout({
             <div className="flex items-center justify-between">
               <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                 <div className="p-1.5 sm:p-2 bg-blue-600 rounded-lg">
-                  <svg className="h-4 w-4 sm:h-5 sm:w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
+                  <Logo className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                 </div>
                 <span className="text-lg sm:text-xl font-bold">Evolv</span>
               </Link>

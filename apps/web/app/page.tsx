@@ -10,12 +10,12 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       <div className="container mx-auto px-4 py-8 sm:py-12 lg:py-16">
         <div className="text-center mb-12 sm:mb-16 max-w-3xl mx-auto">
-          <div className="flex items-center justify-center gap-3 mb-4 sm:mb-6">
-            <div className="p-2 sm:p-3 bg-blue-600 rounded-lg">
-              <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
+          <div className="flex flex-col items-center justify-center mb-4 sm:mb-6">
+            <div className="p-3 sm:p-4 bg-blue-600 rounded-lg mb-4 sm:mb-6">
+              <Sparkles className="h-10 w-10 sm:h-12 sm:w-12 text-white" />
             </div>
-            <div>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-2">Evolv</h1>
+            <div className="space-y-2">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">Evolv</h1>
               <p className="text-lg sm:text-xl text-muted-foreground">Your prompts, but smarter every week</p>
             </div>
           </div>
