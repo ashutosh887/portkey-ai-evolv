@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { api, Family } from '@/lib/api'
-import { Users, RefreshCw, Search, AlertCircle } from 'lucide-react'
+import { Users, RefreshCw, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 
 export default function FamiliesPage() {
