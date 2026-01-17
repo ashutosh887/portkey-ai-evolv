@@ -49,10 +49,33 @@ env/
 *.sqlite3
 data/
 
+# Runtime state files
+ingestion_state.json
+*.state.json
+
 # Logs
 *.log
 logs/
 !apps/web/app/logs/
+
+# Next.js / Web App
+apps/web/node_modules/
+apps/web/.pnp
+apps/web/.pnp.js
+apps/web/coverage/
+apps/web/.next/
+apps/web/out/
+apps/web/build/
+apps/web/.DS_Store
+apps/web/*.pem
+apps/web/npm-debug.log*
+apps/web/yarn-debug.log*
+apps/web/yarn-error.log*
+apps/web/.env*.local
+apps/web/.env
+apps/web/.vercel/
+apps/web/*.tsbuildinfo
+apps/web/next-env.d.ts
 
 # Testing
 .pytest_cache/
