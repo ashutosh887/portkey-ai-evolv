@@ -27,9 +27,11 @@ def add(
     db_gen = get_db()
     db = next(db_gen)
     try:
+        from packages.storage.repositories import LineageRepository
         prompt_repo = PromptRepository(db)
         family_repo = FamilyRepository(db)
-        service = ProcessingService(prompt_repo=prompt_repo, family_repo=family_repo, use_mock_llm=False)
+        lineage_repo = LineageRepository(db)
+        service = ProcessingService(prompt_repo=prompt_repo, family_repo=family_repo, lineage_repo=lineage_repo, use_mock_llm=False)
         dna = asyncio.run(service.process_raw_prompt(text))
         typer.echo(f"Added prompt id={dna.id}")
         typer.echo("✅ Done. Run 'genome run' to cluster into families.")
@@ -94,9 +96,11 @@ def ingest(
         db_gen = get_db()
         db = next(db_gen)
         try:
+            from packages.storage.repositories import LineageRepository
             prompt_repo = PromptRepository(db)
             family_repo = FamilyRepository(db)
-            service = ProcessingService(prompt_repo=prompt_repo, family_repo=family_repo, use_mock_llm=False)
+            lineage_repo = LineageRepository(db)
+            service = ProcessingService(prompt_repo=prompt_repo, family_repo=family_repo, lineage_repo=lineage_repo, use_mock_llm=False)
             
             raw_data = asyncio.run(ingest_from_file(str(file_path)))
             
@@ -164,9 +168,11 @@ def run(limit: int = typer.Option(100, "--limit", "-l", help="Max pending prompt
     db_gen = get_db()
     db = next(db_gen)
     try:
+        from packages.storage.repositories import LineageRepository
         prompt_repo = PromptRepository(db)
         family_repo = FamilyRepository(db)
-        service = ProcessingService(prompt_repo=prompt_repo, family_repo=family_repo, use_mock_llm=False)
+        lineage_repo = LineageRepository(db)
+        service = ProcessingService(prompt_repo=prompt_repo, family_repo=family_repo, lineage_repo=lineage_repo, use_mock_llm=False)
         result = asyncio.run(service.process_batch(limit=limit))
         typer.echo(f"  Processed: {result['processed']}")
         typer.echo(f"  Families created: {result['families_created']}")
@@ -350,25 +356,49 @@ def evolve(
     prompt_id: str = typer.Argument(..., help="Prompt ID to trace evolution"),
 ):
     from packages.storage.database import get_db
-    from packages.storage.repositories import PromptRepository
+    from packages.storage.repositories import PromptRepository, LineageRepository
     
     db_gen = get_db()
     db = next(db_gen)
     try:
         prompt_repo = PromptRepository(db)
-        prompt = prompt_repo.get_by_id(prompt_id)
+        lineage_repo = LineageRepository(db)
         
+        prompt = prompt_repo.get_by_id(prompt_id)
         if not prompt:
             typer.echo(f"❌ Prompt {prompt_id} not found")
             raise typer.Exit(1)
         
-        typer.echo(f"🔗 Evolution chain for prompt: {prompt_id}")
-        typer.echo("⚠️  Lineage tracking not yet implemented (Phase 5)")
-        typer.echo(f"\n   Prompt: {prompt.original_text[:80]}...")
+        typer.echo(f"\n🔗 Evolution chain for prompt: {prompt_id}")
+        typer.echo(f"   Text: {prompt.original_text[:80]}...")
         if prompt.family_id:
             typer.echo(f"   Family: {prompt.family_id}")
+        
+        chain = lineage_repo.get_lineage_chain(prompt_id)
+        
+        if len(chain) == 1:
+            typer.echo("\n   No lineage links found (this prompt has no ancestors or descendants)")
         else:
-            typer.echo("   Family: Not assigned")
+            typer.echo(f"\n   Lineage chain ({len(chain) - 1} links):")
+            
+            ancestors = [c for c in chain if c.get("direction") == "ancestor"]
+            descendants = [c for c in chain if c.get("direction") == "descendant"]
+            
+            if ancestors:
+                typer.echo("\n   Ancestors (parents):")
+                for link in sorted(ancestors, key=lambda x: len(x.get("path", [])), reverse=True):
+                    mutation = link.get("mutation_type", "unknown")
+                    conf = link.get("confidence", 0.0)
+                    typer.echo(f"      ← {link['prompt_id'][:8]}... ({mutation}, conf: {conf:.2f})")
+            
+            typer.echo(f"\n   Current: {prompt_id[:8]}...")
+            
+            if descendants:
+                typer.echo("\n   Descendants (children):")
+                for link in sorted(descendants, key=lambda x: len(x.get("path", []))):
+                    mutation = link.get("mutation_type", "unknown")
+                    conf = link.get("confidence", 0.0)
+                    typer.echo(f"      → {link['prompt_id'][:8]}... ({mutation}, conf: {conf:.2f})")
     finally:
         try:
             next(db_gen)

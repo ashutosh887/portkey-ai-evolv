@@ -4,9 +4,14 @@ from typing import List, Optional, Any
 
 from packages.core.models import PromptDNA, CanonicalTemplate
 from packages.dna_extractor import extract_dna, EmbeddingService
-from packages.clustering import cluster_prompts, classify_new_prompt
+from packages.clustering import cluster_prompts, classify_new_prompt, detect_mutation_type
+from packages.clustering.engine import compute_confidence
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from packages.storage.repositories import LineageRepository
 from packages.llm import MockLLMClient, LLMClient
-from packages.storage import PromptRepository, FamilyRepository
+from packages.storage import PromptRepository, FamilyRepository, LineageRepository
 from packages.ingestion import normalize_text, compute_hash
 
 logger = logging.getLogger(__name__)
@@ -24,10 +29,12 @@ class ProcessingService:
         self,
         prompt_repo: PromptRepository,
         family_repo: FamilyRepository,
+        lineage_repo: Optional["LineageRepository"] = None,
         use_mock_llm: bool = False,
     ):
         self.prompt_repo = prompt_repo
         self.family_repo = family_repo
+        self.lineage_repo = lineage_repo
         self.embedding_service = EmbeddingService()
         self.use_mock_llm = use_mock_llm
         
@@ -79,7 +86,14 @@ class ProcessingService:
         prompt_dna = extract_dna(normalized, metadata)
         embedding = await self.embedding_service.generate_embedding_async(normalized)
         prompt_dna.embedding = embedding
-        self.prompt_repo.create_from_dna(prompt_dna, original_text_override=raw_text)
+        saved_prompt = self.prompt_repo.create_from_dna(prompt_dna, original_text_override=raw_text)
+        prompt_dna.id = saved_prompt.prompt_id
+        
+        if self.lineage_repo:
+            classification, family_id, confidence = await self.classify_new_prompt(prompt_dna)
+            if classification in ("exact_match", "variant") and family_id:
+                self.prompt_repo.update_family(saved_prompt.prompt_id, family_id)
+        
         return prompt_dna
 
     async def process_batch(self, limit: int = 100) -> dict:
@@ -139,4 +153,32 @@ class ProcessingService:
             family_data.append((fm.family_id, [_model_to_dna(m) for m in members]))
 
         classification, family_id, confidence = classify_new_prompt(prompt_dna, family_data)
+        
+        if self.lineage_repo and classification in ("exact_match", "variant") and family_id:
+            members = self.prompt_repo.get_by_family(family_id)
+            if members:
+                best_parent = None
+                best_parent_confidence = 0.0
+                
+                for member in members:
+                    if member.prompt_id == prompt_dna.id:
+                        continue
+                    member_dna = _model_to_dna(member)
+                    if prompt_dna.embedding and member_dna.embedding:
+                        member_confidence = compute_confidence(prompt_dna, [member_dna.embedding])
+                    else:
+                        member_confidence = 0.0
+                    if member_confidence > best_parent_confidence:
+                        best_parent_confidence = member_confidence
+                        best_parent = member
+                
+                if best_parent:
+                    mutation_type = detect_mutation_type(_model_to_dna(best_parent), prompt_dna)
+                    self.lineage_repo.create_lineage(
+                        parent_prompt_id=best_parent.prompt_id,
+                        child_prompt_id=prompt_dna.id,
+                        mutation_type=mutation_type,
+                        confidence=confidence,
+                    )
+        
         return (classification, family_id, confidence)

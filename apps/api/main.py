@@ -7,7 +7,7 @@ import os
 from datetime import datetime, timedelta
 
 from packages.storage.database import get_db
-from packages.storage.repositories import PromptRepository, FamilyRepository, TemplateRepository
+from packages.storage.repositories import PromptRepository, FamilyRepository, TemplateRepository, LineageRepository
 from packages.storage.models import PromptInstance
 from packages.core import ProcessingService
 from packages.ingestion.files import ingest_from_file
@@ -52,7 +52,8 @@ async def ingest_file(
 ):
     prompt_repo = PromptRepository(db)
     family_repo = FamilyRepository(db)
-    service = ProcessingService(prompt_repo=prompt_repo, family_repo=family_repo, use_mock_llm=False)
+    lineage_repo = LineageRepository(db)
+    service = ProcessingService(prompt_repo=prompt_repo, family_repo=family_repo, lineage_repo=lineage_repo, use_mock_llm=False)
     
     with tempfile.NamedTemporaryFile(delete=False, suffix=file.filename) as tmp:
         content = await file.read()
@@ -342,6 +343,7 @@ async def get_prompt(
 ):
     prompt_repo = PromptRepository(db)
     family_repo = FamilyRepository(db)
+    lineage_repo = LineageRepository(db)
     
     prompt = prompt_repo.get_by_id(prompt_id)
     if not prompt:
@@ -352,6 +354,10 @@ async def get_prompt(
     family = None
     if prompt.family_id:
         family = family_repo.get_by_id(prompt.family_id)
+    
+    chain = lineage_repo.get_lineage_chain(prompt_id)
+    ancestors = [c for c in chain if c.get("direction") == "ancestor"]
+    descendants = [c for c in chain if c.get("direction") == "descendant"]
     
     return {
         "prompt_id": prompt.prompt_id,
@@ -380,7 +386,12 @@ async def get_prompt(
             "family_id": family.family_id,
             "family_name": family.family_name,
         } if family else None,
-        "lineage": None,
+        "lineage": {
+            "has_lineage": len(chain) > 1,
+            "ancestors": len(ancestors),
+            "descendants": len(descendants),
+            "total_links": len(chain) - 1,
+        },
     }
 
 
@@ -390,15 +401,18 @@ async def get_prompt_lineage(
     db: Session = Depends(get_db),
 ):
     prompt_repo = PromptRepository(db)
+    lineage_repo = LineageRepository(db)
     
     prompt = prompt_repo.get_by_id(prompt_id)
     if not prompt:
         raise HTTPException(status_code=404, detail=f"Prompt {prompt_id} not found")
     
+    chain = lineage_repo.get_lineage_chain(prompt_id)
+    
     return {
         "prompt_id": prompt_id,
-        "lineage": [],
-        "message": "Lineage tracking not yet implemented (Phase 5)",
+        "lineage": chain,
+        "total_links": len(chain) - 1,
     }
 
 
@@ -409,7 +423,8 @@ async def process_pending(
 ):
     prompt_repo = PromptRepository(db)
     family_repo = FamilyRepository(db)
-    service = ProcessingService(prompt_repo=prompt_repo, family_repo=family_repo, use_mock_llm=False)
+    lineage_repo = LineageRepository(db)
+    service = ProcessingService(prompt_repo=prompt_repo, family_repo=family_repo, lineage_repo=lineage_repo, use_mock_llm=False)
     
     result = await service.process_batch(limit=limit)
     
