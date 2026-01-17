@@ -110,7 +110,7 @@ NEXT_PUBLIC_MOCK_MODE=false`}
                   <li>Navigate to <Link href="/logs" className="text-blue-600 hover:underline">/logs</Link></li>
                   <li>Enter a prompt or use a sample prompt</li>
                   <li>Select a model (GPT-3.5 Turbo recommended for speed)</li>
-                  <li>Click "Generate Log" or enable auto-generation</li>
+                  <li>Click &quot;Generate Log&quot; or enable auto-generation</li>
                   <li>Logs appear in real-time and are sent to Portkey</li>
                 </ol>
               </div>

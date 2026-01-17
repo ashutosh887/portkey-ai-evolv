@@ -57,24 +57,24 @@ export default function ConnectionTest() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center gap-2">
-          <div className="flex-1">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+          <div className="flex-1 space-y-1.5">
             <p className="text-sm text-muted-foreground">
-              Portkey API Key: {process.env.NEXT_PUBLIC_PORTKEY_API_KEY ? '✓ Set' : '✗ Not set'}
+              Portkey API Key: <span className={process.env.NEXT_PUBLIC_PORTKEY_API_KEY ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>{process.env.NEXT_PUBLIC_PORTKEY_API_KEY ? '✓ Set' : '✗ Not set'}</span>
             </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Virtual Key: {process.env.NEXT_PUBLIC_PORTKEY_VIRTUAL_KEY ? '✓ Set' : 'Not set'}
+            <p className="text-xs text-muted-foreground">
+              Virtual Key: <span className={process.env.NEXT_PUBLIC_PORTKEY_VIRTUAL_KEY ? 'text-green-600' : 'text-muted-foreground'}>{process.env.NEXT_PUBLIC_PORTKEY_VIRTUAL_KEY ? '✓ Set' : 'Not set'}</span>
             </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Config ID: {process.env.NEXT_PUBLIC_PORTKEY_CONFIG_ID ? '✓ Set' : 'Not set'}
+            <p className="text-xs text-muted-foreground">
+              Config ID: <span className={process.env.NEXT_PUBLIC_PORTKEY_CONFIG_ID ? 'text-green-600' : 'text-muted-foreground'}>{process.env.NEXT_PUBLIC_PORTKEY_CONFIG_ID ? '✓ Set' : 'Not set'}</span>
             </p>
             {!process.env.NEXT_PUBLIC_PORTKEY_API_KEY && (
-              <p className="text-xs text-red-600 mt-1">
+              <p className="text-xs text-red-600 mt-1 font-medium">
                 Add NEXT_PUBLIC_PORTKEY_API_KEY to .env.local
               </p>
             )}
           </div>
-          <Button onClick={handleTest} disabled={testing}>
+          <Button onClick={handleTest} disabled={testing} className="w-full sm:w-auto">
             {testing ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -113,9 +113,9 @@ export default function ConnectionTest() {
           </div>
         )}
 
-        <div className="text-xs text-muted-foreground space-y-1">
-          <p>Make sure:</p>
-          <ul className="list-disc list-inside ml-2 space-y-1">
+        <div className="text-xs text-muted-foreground space-y-2 pt-2 border-t">
+          <p className="font-medium">Make sure:</p>
+          <ul className="list-disc list-inside ml-2 space-y-1.5">
             <li>Portkey API key has LOGS and COMPLETIONS permissions</li>
             <li>Virtual Key or Config ID configured in Portkey dashboard (optional)</li>
             <li>Environment variables are in .env.local</li>

@@ -33,8 +33,8 @@ export default function JsonViewer({ log }: JsonViewerProps) {
 
   return (
     <div className="relative">
-      <pre className="bg-slate-950 text-slate-50 p-4 rounded-lg overflow-x-auto text-xs font-mono">
-        <code>{jsonString}</code>
+      <pre className="bg-slate-950 text-slate-50 p-3 sm:p-4 rounded-lg overflow-x-auto text-xs font-mono max-h-96 overflow-y-auto">
+        <code className="break-words whitespace-pre-wrap">{jsonString}</code>
       </pre>
     </div>
   )

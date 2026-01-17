@@ -25,13 +25,13 @@ export default function ErrorDisplay({ error }: ErrorDisplayProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2">
-          <p className="text-sm text-red-800 font-mono bg-red-100 p-3 rounded border border-red-200">
+        <div className="space-y-3">
+          <p className="text-sm text-red-800 font-mono bg-red-100 p-3 rounded-md border border-red-200 break-words">
             {error}
           </p>
           {isApiKeyError && (
-            <div className="text-xs text-red-700 space-y-1">
-              <p>Make sure you have:</p>
+            <div className="text-xs text-red-700 space-y-1.5">
+              <p className="font-medium">Make sure you have:</p>
               <ul className="list-disc list-inside ml-2 space-y-1">
                 <li>Set NEXT_PUBLIC_PORTKEY_API_KEY in .env.local</li>
                 <li>API key has LOGS permissions enabled</li>

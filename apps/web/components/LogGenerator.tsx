@@ -201,26 +201,26 @@ export default function LogGenerator({
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Enter a short prompt..."
-            className="w-full px-4 py-2 border border-input bg-background rounded-md focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            className="w-full px-3 sm:px-4 py-2 border border-input bg-background rounded-md focus:ring-2 focus:ring-ring focus:ring-offset-2 resize-none transition-colors"
             rows={3}
           />
           <Button
             onClick={handleSamplePrompt}
             variant="ghost"
             size="sm"
-            className="mt-2 text-xs"
+            className="mt-2 text-xs h-7"
           >
             Use Sample Prompt
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <div>
             <label className="block text-sm font-medium mb-2">Model</label>
             <select
               value={model}
               onChange={(e) => setModel(e.target.value)}
-              className="w-full px-4 py-2 border border-input bg-background rounded-md focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              className="w-full px-3 sm:px-4 py-2 border border-input bg-background rounded-md focus:ring-2 focus:ring-ring focus:ring-offset-2 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={useMock}
             >
               <option value="gpt-4o-mini">GPT-4o Mini</option>
@@ -230,18 +230,18 @@ export default function LogGenerator({
           <div>
             <label className="block text-sm font-medium mb-2">Mode</label>
             <div className="flex items-center h-10">
-              <label className="flex items-center cursor-pointer">
+              <label className="flex items-center cursor-pointer gap-2">
                 <input
                   type="checkbox"
                   checked={useMock}
                   onChange={(e) => setUseMock(e.target.checked)}
-                  className="mr-2 h-4 w-4"
+                  className="h-4 w-4 cursor-pointer"
                 />
                 <span className="text-sm">Mock Mode</span>
               </label>
             </div>
             {useMock && (
-              <Badge variant="secondary" className="mt-1 text-xs">
+              <Badge variant="secondary" className="mt-1.5 text-xs">
                 Mock Mode
               </Badge>
             )}
@@ -251,20 +251,20 @@ export default function LogGenerator({
         <Button
           onClick={handleGenerate}
           disabled={isGenerating || !prompt.trim()}
-          className="w-full"
+          className="w-full transition-all"
         >
           {isGenerating ? 'Generating...' : 'Generate Log'}
         </Button>
 
-        <div className="border-t pt-4">
-          <h3 className="text-lg font-semibold mb-3">Auto Generation</h3>
+        <div className="border-t pt-4 mt-4">
+          <h3 className="text-base sm:text-lg font-semibold mb-3">Auto Generation</h3>
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium mb-2">
-                Rate: {generationRate.toFixed(1)} log{generationRate !== 1 ? 's' : ''} per second
+                Rate: <span className="font-semibold text-blue-600">{generationRate.toFixed(1)}</span> log{generationRate !== 1 ? 's' : ''} per second
                 {useMock && (
-                  <span className="ml-2 text-xs text-green-600">
-                    (Can go up to 30+ in mock mode)
+                  <span className="ml-2 text-xs text-green-600 font-normal">
+                    (up to 30+ in mock)
                   </span>
                 )}
               </label>
@@ -275,7 +275,7 @@ export default function LogGenerator({
                 step="0.1"
                 value={generationRate}
                 onChange={(e) => setGenerationRate(parseFloat(e.target.value))}
-                className="w-full"
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isAutoGenerating}
               />
               <div className="flex justify-between text-xs text-muted-foreground mt-1">
@@ -286,13 +286,13 @@ export default function LogGenerator({
             <Button
               onClick={handleAutoGenerate}
               variant={isAutoGenerating ? 'destructive' : 'default'}
-              className="w-full"
+              className="w-full transition-all"
               disabled={isGenerating && !isAutoGenerating}
             >
               {isAutoGenerating ? 'Stop Auto Generation' : 'Start Auto Generation'}
             </Button>
             {isAutoGenerating && (
-              <p className="text-xs text-center text-muted-foreground">
+              <p className="text-xs text-center text-muted-foreground animate-pulse">
                 Generating logs automatically...
               </p>
             )}
