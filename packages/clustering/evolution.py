@@ -10,7 +10,7 @@ from packages.clustering.engine import compute_confidence, CONFIDENCE_THRESHOLDS
 def classify_new_prompt(
     new_prompt: PromptDNA,
     existing_families: List[Tuple[str, List[PromptDNA]]],
-) -> Tuple[str, str, float]:
+) -> Tuple[str, Optional[str], float]:
     """
     Classify a new prompt into existing families or mark as new
     

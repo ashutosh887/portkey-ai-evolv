@@ -7,6 +7,56 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 
 
+# --- DNA extraction & clustering (used by dna_extractor, clustering, llm, processing) ---
+
+
+class PromptStructure(BaseModel):
+    """Structural components of a prompt."""
+    system_message: Optional[str] = None
+    user_message: Optional[str] = None
+    assistant_prefill: Optional[str] = None
+    total_tokens: int = 0
+
+
+class PromptVariables(BaseModel):
+    """Detected variables in a prompt."""
+    detected: List[str] = Field(default_factory=list)
+    slots: int = 0
+
+
+class PromptInstructions(BaseModel):
+    """Extracted instructions and constraints."""
+    tone: List[str] = Field(default_factory=list)
+    format: Optional[str] = None
+    constraints: List[str] = Field(default_factory=list)
+    examples_count: int = 0
+
+
+class PromptDNA(BaseModel):
+    """
+    Extracted "DNA" of a prompt: structure, variables, instructions, embedding.
+    Used for clustering and template extraction.
+    """
+    id: str
+    raw_text: str
+    hash: str
+    structure: PromptStructure
+    variables: PromptVariables
+    instructions: PromptInstructions
+    embedding: List[float] = Field(default_factory=list)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class CanonicalTemplate(BaseModel):
+    """Canonical template extracted from a cluster of prompts."""
+    text: str
+    variables: List[str] = Field(default_factory=list)
+    example_values: Dict[str, List[str]] = Field(default_factory=dict)
+
+
+# --- Storage / API domain models ---
+
+
 class PromptFamily(BaseModel):
     """
     PromptFamily (Cluster Level)

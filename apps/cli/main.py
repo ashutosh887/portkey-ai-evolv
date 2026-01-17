@@ -18,13 +18,38 @@ app = typer.Typer(
 
 
 @app.command()
+def add(
+    text: str = typer.Argument(..., help="Prompt text to add (will be normalized, embedded, and stored)"),
+):
+    """Add a single prompt: extract DNA, embed, and store. Use before 'genome run' to build families."""
+    from packages.storage.database import get_db
+    from packages.storage.repositories import PromptRepository, FamilyRepository
+    from packages.core import ProcessingService
+
+    db_gen = get_db()
+    db = next(db_gen)
+    try:
+        prompt_repo = PromptRepository(db)
+        family_repo = FamilyRepository(db)
+        service = ProcessingService(prompt_repo=prompt_repo, family_repo=family_repo, use_mock_llm=True)
+        dna = asyncio.run(service.process_raw_prompt(text))
+        typer.echo(f"Added prompt id={dna.id}")
+        typer.echo("✅ Done. Run 'genome run' to cluster into families.")
+    finally:
+        try:
+            next(db_gen)
+        except StopIteration:
+            pass
+
+
+@app.command()
 def ingest(
     file: str = typer.Argument(..., help="Path to file containing prompts"),
     source: str = typer.Option("file", help="Source type: file, portkey, git"),
 ):
     """Ingest prompts from a file, Portkey logs, or git repository"""
     typer.echo(f"Ingesting prompts from {source}: {file}")
-    # TODO: Implement ingestion logic
+    # TODO: Implement ingestion logic (Phase 3)
     typer.echo("✅ Ingestion complete")
 
 
@@ -59,11 +84,28 @@ def prompts(limit: int = 20):
 
 
 @app.command()
-def run():
+def run(limit: int = typer.Option(100, "--limit", "-l", help="Max pending prompts to process")):
     """Process pending prompts (clustering, template extraction)"""
+    from packages.storage.database import get_db
+    from packages.storage.repositories import PromptRepository, FamilyRepository
+    from packages.core import ProcessingService
+
     typer.echo("Processing pending prompts...")
-    # TODO: Implement processing logic
-    typer.echo("✅ Processing complete")
+    db_gen = get_db()
+    db = next(db_gen)
+    try:
+        prompt_repo = PromptRepository(db)
+        family_repo = FamilyRepository(db)
+        service = ProcessingService(prompt_repo=prompt_repo, family_repo=family_repo, use_mock_llm=True)
+        result = asyncio.run(service.process_batch(limit=limit))
+        typer.echo(f"  Processed: {result['processed']}")
+        typer.echo(f"  Families created: {result['families_created']}")
+        typer.echo("✅ Processing complete")
+    finally:
+        try:
+            next(db_gen)
+        except StopIteration:
+            pass
 
 
 @app.command()

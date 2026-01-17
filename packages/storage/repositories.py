@@ -2,11 +2,20 @@
 Repository pattern for database operations
 """
 
-from typing import Optional, List
+import uuid
+from typing import Optional, List, TYPE_CHECKING
 from sqlalchemy.orm import Session
-from packages.storage.models import PromptInstance as PromptInstanceModel, PromptFamily as PromptFamilyModel
+from packages.storage.models import (
+    PromptInstance as PromptInstanceModel,
+    PromptFamily as PromptFamilyModel,
+    Template as TemplateModel,
+)
 from packages.core.models import PromptInstance as PromptInstanceDomain
+from packages.ingestion.normalizer import normalize_text
 from datetime import datetime
+
+if TYPE_CHECKING:
+    from packages.core.models import PromptDNA
 
 
 class PromptRepository:
@@ -35,6 +44,39 @@ class PromptRepository:
         self.db.commit()
         self.db.refresh(prompt_model)
         return prompt_model
+
+    def create_from_dna(
+        self, dna: "PromptDNA", original_text_override: Optional[str] = None
+    ) -> PromptInstanceModel:
+        """
+        Create a new prompt record from a PromptDNA (e.g. from process_raw_prompt).
+        Uses original_text_override for original_text when provided (to preserve user's raw input).
+        """
+        existing = self.get_by_id(dna.id)
+        if existing:
+            return existing
+        original = original_text_override if original_text_override is not None else dna.raw_text
+        normalized = normalize_text(dna.raw_text)
+        prompt_model = PromptInstanceModel(
+            prompt_id=dna.id,
+            original_text=original,
+            normalized_text=normalized,
+            dedup_hash=dna.hash,
+            simhash=None,
+            embedding_vector=dna.embedding or [],
+            metadata_=dna.metadata or {},
+        )
+        self.db.add(prompt_model)
+        self.db.commit()
+        self.db.refresh(prompt_model)
+        return prompt_model
+
+    def update_embedding(self, prompt_id: str, embedding: List[float]) -> None:
+        """Update the embedding vector for a prompt (e.g. when computing in batch)."""
+        prompt = self.get_by_id(prompt_id)
+        if prompt:
+            prompt.embedding_vector = embedding
+            self.db.commit()
 
     def get_by_id(self, prompt_id: str) -> Optional[PromptInstanceModel]:
         """Get prompt by ID"""
@@ -111,3 +153,45 @@ class FamilyRepository:
             family.member_count = count
             family.updated_at = datetime.utcnow()
             self.db.commit()
+
+    def create_family(
+        self,
+        family_id: str,
+        family_name: str,
+        description: Optional[str] = None,
+        member_count: int = 0,
+        centroid_vector: Optional[List[float]] = None,
+    ) -> PromptFamilyModel:
+        """Create a new prompt family (cluster)."""
+        family = PromptFamilyModel(
+            family_id=family_id,
+            family_name=family_name,
+            description=description,
+            member_count=member_count,
+            centroid_vector=centroid_vector,
+        )
+        self.db.add(family)
+        self.db.commit()
+        self.db.refresh(family)
+        return family
+
+    def create_template(
+        self,
+        family_id: str,
+        template_text: str,
+        slots: dict,
+        quality_score: Optional[float] = None,
+    ) -> TemplateModel:
+        """Create a template for a family. slots typically: {variables: [...], example_values: {...}}."""
+        template = TemplateModel(
+            template_id=str(uuid.uuid4()),
+            family_id=family_id,
+            template_text=template_text,
+            slots=slots,
+            template_version=1,
+            quality_score=quality_score,
+        )
+        self.db.add(template)
+        self.db.commit()
+        self.db.refresh(template)
+        return template
