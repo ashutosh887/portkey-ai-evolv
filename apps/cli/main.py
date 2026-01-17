@@ -3,6 +3,12 @@ CLI application for Evolv - Prompt Genome Project
 """
 
 import typer
+from pathlib import Path
+import asyncio
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = typer.Typer(
     name="genome",
@@ -76,6 +82,59 @@ def stats():
     typer.echo("  Prompts: 0")
     typer.echo("  Families: 0")
     typer.echo("  Templates: 0")
+
+
+@app.command()
+def ml_process(
+    csv_file: str = typer.Argument(..., help="Path to CSV file with prompts"),
+    output_dir: str = typer.Option("./output", "--output", "-o", help="Output directory"),
+    embedding_model: str = typer.Option("bge-large-en", "--embedding", help="Embedding model"),
+    enable_reranking: bool = typer.Option(False, "--rerank", help="Enable LLM reranking"),
+    enable_explanations: bool = typer.Option(False, "--explain", help="Enable LLM explanations"),
+):
+    """
+    Process prompts through ML Core Engine (Module C)
+    
+    This is an OFFLINE/BATCH pipeline that:
+    - Normalizes prompts
+    - Generates semantic embeddings
+    - Clusters prompts into families
+    - Builds FAISS retrieval index
+    - Optionally reranks and explains (if enabled)
+    
+    Input: CSV file with 'prompt' column
+    Output: JSON artifacts and FAISS index in output directory
+    """
+    from packages.ml_core.pipeline import MLPipeline
+    from packages.ml_core.config import MLConfig
+    
+    csv_path = Path(csv_file)
+    if not csv_path.exists():
+        typer.echo(f"❌ Error: CSV file not found: {csv_file}", err=True)
+        raise typer.Exit(1)
+    
+    # Create config
+    config = MLConfig.from_env()
+    config.output_dir = output_dir
+    config.embedding_model = embedding_model  # type: ignore
+    config.enable_reranking = enable_reranking
+    config.enable_explanations = enable_explanations
+    
+    typer.echo("🚀 Starting ML Core Engine Pipeline...")
+    typer.echo(f"  Input: {csv_file}")
+    typer.echo(f"  Output: {output_dir}")
+    typer.echo(f"  Embedding model: {embedding_model}")
+    typer.echo(f"  Reranking: {'enabled' if enable_reranking else 'disabled'}")
+    typer.echo(f"  Explanations: {'enabled' if enable_explanations else 'disabled'}")
+    typer.echo()
+    
+    try:
+        pipeline = MLPipeline(config)
+        asyncio.run(pipeline.run(csv_path))
+        typer.echo("\n✅ ML Core Engine processing complete!")
+    except Exception as e:
+        typer.echo(f"❌ Error: {str(e)}", err=True)
+        raise typer.Exit(1)
 
 
 if __name__ == "__main__":
