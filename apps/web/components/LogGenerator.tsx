@@ -181,7 +181,7 @@ export default function LogGenerator({
   }
 
   return (
-    <Card>
+    <Card className="h-fit sticky top-4">
       <CardHeader>
         <CardTitle>Generate Logs</CardTitle>
         <CardDescription>

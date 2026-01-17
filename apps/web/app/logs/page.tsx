@@ -24,8 +24,8 @@ export default function LogsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-      <div className="container mx-auto px-4 py-6 sm:py-8 max-w-7xl">
-        <div className="mb-6 sm:mb-8">
+      <div className="container mx-auto px-4 py-6 max-w-[1800px]">
+        <div className="mb-6">
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">Log Generator</h1>
           <p className="text-muted-foreground text-base sm:text-lg">
             Generate prompt logs for Portkey observability and Evolv analysis
@@ -33,23 +33,23 @@ export default function LogsPage() {
         </div>
 
         <Tabs defaultValue="generator" className="w-full">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
             <TabsTrigger value="generator">Generator</TabsTrigger>
             <TabsTrigger value="test">Connection Test</TabsTrigger>
           </TabsList>
-          <TabsContent value="test" className="mt-6">
+          <TabsContent value="test" className="mt-0">
             <ConnectionTest />
           </TabsContent>
-          <TabsContent value="generator" className="mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-              <div className="lg:col-span-1">
+          <TabsContent value="generator" className="mt-0">
+            <div className="grid grid-cols-1 xl:grid-cols-[400px_1fr] gap-6 h-[calc(100vh-200px)]">
+              <div className="xl:h-full overflow-y-auto">
                 <LogGenerator
                   onLogGenerated={handleLogGenerated}
                   isGenerating={isGenerating}
                   setIsGenerating={setIsGenerating}
                 />
               </div>
-              <div className="lg:col-span-2">
+              <div className="xl:h-full overflow-hidden flex flex-col">
                 <LiveLogs
                   logs={recentLogs}
                   isGenerating={isGenerating}

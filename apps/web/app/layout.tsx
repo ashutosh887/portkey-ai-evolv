@@ -27,11 +27,17 @@ export default function RootLayout({
                 <span className="text-lg sm:text-xl font-bold">Evolv</span>
               </Link>
               <div className="flex gap-1 sm:gap-2">
+                <Link href="/dashboard">
+                  <Button variant="ghost" size="sm" className="text-sm">Dashboard</Button>
+                </Link>
+                <Link href="/families">
+                  <Button variant="ghost" size="sm" className="text-sm">Families</Button>
+                </Link>
+                <Link href="/prompts">
+                  <Button variant="ghost" size="sm" className="text-sm">Prompts</Button>
+                </Link>
                 <Link href="/logs">
                   <Button variant="ghost" size="sm" className="text-sm">Logs</Button>
-                </Link>
-                <Link href="/">
-                  <Button variant="ghost" size="sm" className="text-sm">Home</Button>
                 </Link>
               </div>
             </div>
