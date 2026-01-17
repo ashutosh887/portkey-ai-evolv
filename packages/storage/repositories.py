@@ -26,7 +26,6 @@ class PromptRepository:
     
     def create_from_instance(self, instance: PromptInstanceDomain) -> PromptInstanceModel:
         """Create a new prompt record from a domain instance"""
-        # Check if already exists by ID
         existing = self.get_by_id(instance.prompt_id)
         if existing:
             return existing

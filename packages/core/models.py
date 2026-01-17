@@ -7,9 +7,6 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 
 
-# --- DNA extraction & clustering (used by dna_extractor, clustering, llm, processing) ---
-
-
 class PromptStructure(BaseModel):
     """Structural components of a prompt."""
     system_message: Optional[str] = None
@@ -54,9 +51,6 @@ class CanonicalTemplate(BaseModel):
     example_values: Dict[str, List[str]] = Field(default_factory=dict)
 
 
-# --- Storage / API domain models ---
-
-
 class PromptFamily(BaseModel):
     """
     PromptFamily (Cluster Level)
@@ -82,7 +76,7 @@ class PromptInstance(BaseModel):
     original_text: str
     normalized_text: Optional[str] = None
     dedup_hash: Optional[str] = None
-    simhash: Optional[str] = None  # 64-bit SimHash fingerprint as hex string
+    simhash: Optional[str] = None
     
     embedding_vector: Optional[List[float]] = None
     similarity_score: Optional[float] = None

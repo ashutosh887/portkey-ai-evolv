@@ -20,13 +20,12 @@ class PromptFamily(Base):
     family_name = Column(String, nullable=False)
     description = Column(Text)
     member_count = Column(Integer, default=0)
-    centroid_vector = Column(JSON)  # Vector stored as JSON
+    centroid_vector = Column(JSON)
     version = Column(Integer, default=1)
     
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships
     members = relationship("PromptInstance", back_populates="family")
     templates = relationship("Template", back_populates="family")
 
@@ -41,21 +40,20 @@ class PromptInstance(Base):
     prompt_id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     original_text = Column(Text, nullable=False)
     normalized_text = Column(Text, index=True)
-    dedup_hash = Column(String, index=True) # SHA256 hash of normalized text
-    simhash = Column(String, index=True)   # 64-bit SimHash fingerprint as hex string
+    dedup_hash = Column(String, index=True)
+    simhash = Column(String, index=True)
     
-    embedding_vector = Column(JSON)  # Vector stored as JSON
+    embedding_vector = Column(JSON)
     similarity_score = Column(Float)
     
     family_id = Column(String, ForeignKey("prompt_families.family_id"), nullable=True, index=True)
     
-    metadata_ = Column(JSON, default={}) # 'metadata' is reserved in SQLAlchemy, using metadata_
+    metadata_ = Column(JSON, default={})
     is_template_seed = Column(Boolean, default=False)
     
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships
     family = relationship("PromptFamily", back_populates="members")
 
 
@@ -70,7 +68,7 @@ class Template(Base):
     family_id = Column(String, ForeignKey("prompt_families.family_id"), nullable=False, index=True)
     
     template_text = Column(Text, nullable=False)
-    slots = Column(JSON, default={}) # Slot definitions
+    slots = Column(JSON, default={})
     
     template_version = Column(Integer, default=1)
     quality_score = Column(Float)
@@ -78,5 +76,4 @@ class Template(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships
     family = relationship("PromptFamily", back_populates="templates")

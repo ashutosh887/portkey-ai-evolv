@@ -34,19 +34,15 @@ def simhash(text: str, num_bits: int = 64) -> int:
     if not tokens:
         return 0
     
-    # Vector to accumulate bit weights
     vector = [0] * num_bits
     
     for token in tokens:
-        # Hash token to 64-bit integer
         h = int(hashlib.md5(token.encode()).hexdigest(), 16) & ((1 << num_bits) - 1)
         
-        # Update vector based on each bit
         for i in range(num_bits):
             bit = (h >> i) & 1
             vector[i] += 1 if bit else -1
     
-    # Build fingerprint from sign of each position
     fingerprint = 0
     for i, v in enumerate(vector):
         if v > 0:
@@ -158,7 +154,6 @@ class SimHashDeduplicator:
         return len(self._fingerprints)
 
 
-# Convenience function for one-off comparisons
 def are_similar(text_a: str, text_b: str, threshold: int = 3) -> Tuple[bool, int]:
     """
     Check if two texts are similar.

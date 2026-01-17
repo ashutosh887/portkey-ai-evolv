@@ -23,16 +23,9 @@ def normalize_text(text: str) -> str:
     Returns:
         Normalized text
     """
-    # Convert to lowercase
     text = text.lower()
-    
-    # Remove punctuation (keep only alphanumeric and whitespace)
     text = re.sub(r'[^\w\s]', '', text)
-    
-    # Collapse multiple whitespace to single space
     text = re.sub(r'\s+', ' ', text)
-    
-    # Strip leading/trailing whitespace
     return text.strip()
 
 

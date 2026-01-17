@@ -53,19 +53,15 @@ class PortKeyIngestor:
             List of parsed PromptInstance objects
         """
         try:
-            # Step 1: Trigger the export job
             logger.info(f"Starting Portkey export for logs since {time_min}")
             export_id = await self.trigger_export(time_min)
             
-            # Step 2: Poll until the job is ready
             logger.info(f"Polling export job {export_id}...")
             download_url = await self.wait_for_export(export_id)
             
-            # Step 3: Download and parse the file
             logger.info("Export complete. Downloading logs...")
             logs = await self.download_logs(download_url)
             
-            # Step 4: Convert to internal schema
             instances = [self.map_log_to_instance(log) for log in logs]
             logger.info(f"Successfully ingested {len(instances)} prompts from Portkey")
             
@@ -88,9 +84,8 @@ class PortKeyIngestor:
             "filters": {
                 "time_of_generation_min": time_min.isoformat(),
                 "time_of_generation_max": dt.utcnow().isoformat(),
-                "page_size": 50000  # Max limit
+                "page_size": 50000
             },
-            # Explicitly request all necessary fields based on OpenAPI spec
             "requested_data": [
                 "id",
                 "trace_id", 
@@ -114,11 +109,7 @@ class PortKeyIngestor:
             raise
         
         data = response.json()
-        # The response format from creating an export usually contains the ID directly or in 'object'
-        # Based on typical behavior, ID is top level.
         export_id = data["id"]
-        
-        # Step 1b: Start the export (move from 'draft' to 'processing')
         logger.info(f"Starting export job {export_id}...")
         start_response = await self.client.post(f"/logs/exports/{export_id}/start")
         start_response.raise_for_status()
@@ -139,7 +130,6 @@ class PortKeyIngestor:
             logger.info(f"Export status: {status}")
             
             if status in ("completed", "success"):
-                # Call the download endpoint to get the signed URL
                 logger.info(f"Export complete! Getting download URL...")
                 download_response = await self.client.get(f"/logs/exports/{export_id}/download")
                 download_response.raise_for_status()
@@ -150,19 +140,13 @@ class PortKeyIngestor:
             elif status in ("failure", "failed", "error"):
                 raise Exception(f"Export job {export_id} failed on server side.")
             
-            # Wait before next poll
             await asyncio.sleep(poll_interval)
 
     async def download_logs(self, url: str) -> List[dict]:
-        """
-        Step 3: Download the JSONL file from the signed URL.
-        """
-        # Create a new client for the download URL (standard HTTP, no API headers)
         async with httpx.AsyncClient() as dl_client:
             response = await dl_client.get(url)
             response.raise_for_status()
             
-            # Parse JSONL (one JSON object per line)
             logs = []
             for line in response.text.strip().split('\n'):
                 if line.strip():
@@ -170,28 +154,20 @@ class PortKeyIngestor:
             return logs
 
     def map_log_to_instance(self, log: dict) -> PromptInstance:
-        """
-        Step 4: Map raw Portkey log to PromptInstance model.
-        """
         from packages.ingestion.normalizer import normalize_text, compute_hash
         
-        # Dictionary safe get for nested structure
         request_body = log.get("request", {})
         messages = request_body.get("messages", [])
         
-        # Extract the last user message as the "prompt"
-        # (Heuristic: Scan backwards for the first role='user')
         user_text = ""
         for m in reversed(messages):
             if m.get("role") == "user":
                 user_text = m.get("content", "")
                 break
         
-        # Normalize text and compute hashes for deduplication
         normalized = normalize_text(user_text)
         dedup_hash = compute_hash(normalized)
         
-        # Compute SimHash fingerprint for near-duplicate detection (stored as hex string)
         from packages.ingestion.dedup import simhash
         simhash_int = simhash(normalized) if normalized else None
         simhash_fingerprint = hex(simhash_int) if simhash_int is not None else None
@@ -216,11 +192,9 @@ class PortKeyIngestor:
         )
 
     def _parse_date(self, date_str: Optional[str]) -> datetime:
-        """Helper to parse ISO dates safely"""
         if not date_str:
             return datetime.utcnow()
         try:
-            # Handle potential Z or other formats
             return datetime.fromisoformat(date_str.replace('Z', '+00:00'))
         except ValueError:
             return datetime.utcnow()

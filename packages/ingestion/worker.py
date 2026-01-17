@@ -17,11 +17,9 @@ from packages.ingestion.portkey import PortKeyIngestor
 from packages.storage.database import get_db
 from packages.storage.repositories import PromptRepository
 
-# Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("worker")
 
-# Load environment variables
 load_dotenv()
 
 STATE_FILE = Path("ingestion_state.json")
@@ -38,7 +36,6 @@ def load_state() -> datetime:
         except Exception as e:
             logger.warning(f"Failed to load state: {e}")
     
-    # Default: 24 hours ago
     return datetime.utcnow() - timedelta(hours=24)
 
 def save_state(last_run: datetime):
@@ -66,15 +63,12 @@ async def run_worker(interval_minutes: int = 10):
 
     while True:
         try:
-            # 1. Determine time window
             last_run_time = load_state()
             current_run_time = datetime.utcnow()
             
-            # 2. Run ingestion
             logger.info(f"Running ingestion from {last_run_time} to now")
             instances = await ingestor.run_ingestion(time_min=last_run_time)
             
-            # 3. Handle results (save to DB with deduplication)
             if instances:
                 logger.info(f"Processing {len(instances)} logs with deduplication...")
                 db_gen = get_db()
@@ -83,10 +77,8 @@ async def run_worker(interval_minutes: int = 10):
                     from packages.ingestion.dedup import SimHashDeduplicator, hamming_distance
                     
                     repo = PromptRepository(db)
-                    # SimHash with Hamming distance threshold of 3 bits (~98% similar)
                     deduplicator = SimHashDeduplicator(threshold=3)
                     
-                    # Load existing simhashes from DB (not in-memory!)
                     existing_simhashes = repo.get_all_simhashes()
                     for prompt_id, fingerprint in existing_simhashes:
                         if fingerprint is not None:
@@ -98,17 +90,13 @@ async def run_worker(interval_minutes: int = 10):
                     near_dup_count = 0
                     
                     for instance in instances:
-                        # Skip empty prompts
                         if not instance.normalized_text:
                             continue
                         
-                        # 1. Check exact duplicate by hash (SHA256)
                         if repo.get_by_hash(instance.dedup_hash):
                             exact_dup_count += 1
                             continue
                         
-                        # 2. Check near-duplicate by SimHash (Hamming distance)
-                        # Use the pre-computed simhash from the instance (stored as hex string)
                         is_near_dup = False
                         matching_id = None
                         distance = None
@@ -129,16 +117,13 @@ async def run_worker(interval_minutes: int = 10):
                             logger.info(f"Near-duplicate (Hamming={distance}): '{instance.normalized_text[:50]}...' matches {matching_id}")
                             continue
                         
-                        # 3. Save to DB (simhash is stored automatically)
                         repo.create_from_instance(instance)
-                        # Also add to in-memory index for this batch
                         if instance.simhash is not None:
                             deduplicator._fingerprints[instance.prompt_id] = instance.simhash
                         saved_count += 1
                     
                     logger.info(f"Deduplication complete: {saved_count} saved, {exact_dup_count} exact duplicates, {near_dup_count} near-duplicates skipped")
                 finally:
-                    # properly close the generator-yielded session
                     try:
                         next(db_gen)
                     except StopIteration:
@@ -146,14 +131,11 @@ async def run_worker(interval_minutes: int = 10):
             else:
                 logger.info("No new logs found.")
 
-            # 4. Update state only if successful
             save_state(current_run_time)
             
         except Exception as e:
             logger.error(f"Error in ingestion loop: {e}")
-            # Don't update state on error, so we retry next time
         
-        # 5. Sleep
         logger.info(f"Sleeping for {interval_minutes} minutes...")
         await asyncio.sleep(interval_minutes * 60)
 

@@ -36,10 +36,8 @@ def get_db():
 
 def init_db():
     """Create all database tables"""
-    # Import models to ensure they are registered with Base
-    from packages.storage import models  # noqa: F401
+    from packages.storage import models
     Base.metadata.create_all(bind=engine)
 
 
-# Auto-create tables on import
 init_db()
