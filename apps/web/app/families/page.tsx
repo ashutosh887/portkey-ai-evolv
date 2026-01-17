@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { api, Family } from '@/lib/api'
 import { Users, RefreshCw, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
+import toast from 'react-hot-toast'
 import config from '@/config'
 
 export default function FamiliesPage() {

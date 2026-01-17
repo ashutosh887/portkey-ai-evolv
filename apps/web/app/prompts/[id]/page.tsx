@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { api, Prompt, LineageLink } from '@/lib/api'
 import { RefreshCw, ArrowLeft, AlertCircle, Link as LinkIcon, Users, Code2 } from 'lucide-react'
 import Link from 'next/link'
+import toast from 'react-hot-toast'
 
 export default function PromptDetailPage() {
   const params = useParams()
@@ -29,7 +30,9 @@ export default function PromptDetailPage() {
       setPrompt(promptData)
       setLineage(lineageData.lineage || [])
     } catch (err: any) {
-      setError(err.message || 'Failed to load prompt')
+      const errorMessage = err.message || 'Failed to load prompt'
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }

@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { api, Template } from '@/lib/api'
 import { Users, FileText, RefreshCw, ArrowLeft, AlertCircle, Link as LinkIcon } from 'lucide-react'
 import Link from 'next/link'
+import toast from 'react-hot-toast'
 
 export default function FamilyDetailPage() {
   const params = useParams()
@@ -27,7 +28,9 @@ export default function FamilyDetailPage() {
       setMembers(data.members || [])
       setTemplate(data.template || null)
     } catch (err: any) {
-      setError(err.message || 'Failed to load family')
+      const errorMessage = err.message || 'Failed to load family'
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }
