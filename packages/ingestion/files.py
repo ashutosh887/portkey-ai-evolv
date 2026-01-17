@@ -28,7 +28,6 @@ async def _ingest_json(file_path: str) -> list[dict]:
     with open(file_path, "r", encoding="utf-8") as f:
         data = json.load(f)
     
-    # Handle both list and single object
     if isinstance(data, list):
         return data
     elif isinstance(data, dict):

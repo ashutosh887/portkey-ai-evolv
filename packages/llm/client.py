@@ -36,7 +36,6 @@ class LLMClient:
     def __init__(self, api_key: Optional[str] = None, virtual_key: Optional[str] = None):
         self.api_key = api_key or os.getenv("PORTKEY_API_KEY")
         self.virtual_key = virtual_key or os.getenv("PORTKEY_VIRTUAL_KEY")
-        # TODO: Initialize Portkey client
     
     async def extract_template(self, prompt_dnas: list[PromptDNA]) -> CanonicalTemplate:
         """
@@ -48,7 +47,6 @@ class LLMClient:
         Returns:
             CanonicalTemplate object
         """
-        # Format prompts for LLM
         prompts_text = "\n\n---\n\n".join([dna.raw_text for dna in prompt_dnas])
         
         prompt = TEMPLATE_EXTRACTION_PROMPT.format(
@@ -56,10 +54,6 @@ class LLMClient:
             prompts=prompts_text,
         )
         
-        # TODO: Call Portkey API with fallback chain
-        # GPT-4 → Claude → Llama
-        
-        # Placeholder response
         return CanonicalTemplate(
             text="Template extraction not yet implemented",
             variables=[],
@@ -67,5 +61,4 @@ class LLMClient:
     
     async def generate_explanation(self, prompt_dnas: list[PromptDNA]) -> str:
         """Generate human-readable explanation for why prompts belong together"""
-        # TODO: Implement
         return "Explanation generation not yet implemented"

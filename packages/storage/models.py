@@ -15,12 +15,11 @@ class PromptModel(Base):
     id = Column(String, primary_key=True)
     raw_text = Column(Text, nullable=False)
     hash = Column(String, unique=True, nullable=False, index=True)
-    dna_json = Column(JSON)  # Serialized PromptDNA
+    dna_json = Column(JSON)
     family_id = Column(String, ForeignKey("families.id"), nullable=True, index=True)
     parent_id = Column(String, ForeignKey("prompts.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     
-    # Relationships
     family = relationship("FamilyModel", back_populates="members")
     parent = relationship("PromptModel", remote_side=[id])
 
@@ -32,13 +31,12 @@ class FamilyModel(Base):
     id = Column(String, primary_key=True)
     name = Column(String, nullable=False)
     description = Column(Text)
-    canonical_template_json = Column(JSON)  # Serialized CanonicalTemplate
+    canonical_template_json = Column(JSON)
     member_count = Column(Integer, default=0)
     statistics = Column(JSON, default={})
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships
     members = relationship("PromptModel", back_populates="family")
 
 
@@ -49,8 +47,8 @@ class LineageModel(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     child_id = Column(String, ForeignKey("prompts.id"), nullable=False)
     parent_id = Column(String, ForeignKey("prompts.id"), nullable=False)
-    mutation_type = Column(String)  # "exact_match", "variant", "new_family"
-    confidence = Column(String)  # Store as string for flexibility
+    mutation_type = Column(String)
+    confidence = Column(String)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
 
@@ -60,7 +58,7 @@ class ProcessingLogModel(Base):
     
     id = Column(Integer, primary_key=True, autoincrement=True)
     batch_id = Column(String, unique=True, nullable=False)
-    status = Column(String)  # "pending", "processing", "completed", "failed"
+    status = Column(String)
     prompts_processed = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
     completed_at = Column(DateTime, nullable=True)

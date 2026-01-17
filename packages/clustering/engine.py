@@ -43,7 +43,6 @@ def cluster_prompts(prompt_dnas: List[PromptDNA]) -> dict[int, List[str]]:
     if len(prompt_dnas) < 2:
         return {}
     
-    # Extract embeddings
     embeddings = [dna.embedding for dna in prompt_dnas if dna.embedding]
     
     if len(embeddings) < 2:
@@ -51,7 +50,6 @@ def cluster_prompts(prompt_dnas: List[PromptDNA]) -> dict[int, List[str]]:
     
     embeddings_array = np.array(embeddings)
     
-    # Run HDBSCAN
     clusterer = hdbscan.HDBSCAN(
         min_cluster_size=CLUSTERING_CONFIG["min_cluster_size"],
         min_samples=CLUSTERING_CONFIG["min_samples"],
@@ -61,10 +59,9 @@ def cluster_prompts(prompt_dnas: List[PromptDNA]) -> dict[int, List[str]]:
     
     cluster_labels = clusterer.fit_predict(embeddings_array)
     
-    # Group prompts by cluster
     clusters: dict[int, List[str]] = {}
     for idx, label in enumerate(cluster_labels):
-        if label != -1:  # -1 means noise/outlier
+        if label != -1:
             if label not in clusters:
                 clusters[label] = []
             clusters[label].append(prompt_dnas[idx].id)
@@ -86,7 +83,6 @@ def compute_confidence(prompt_dna: PromptDNA, family_embeddings: List[List[float
     if not prompt_dna.embedding or not family_embeddings:
         return 0.0
     
-    # Compute average similarity to family members
     similarities = [
         cosine_similarity([prompt_dna.embedding], [emb])[0][0]
         for emb in family_embeddings

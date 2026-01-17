@@ -9,12 +9,12 @@ from packages.core.models import PromptDNA, PromptStructure, PromptVariables, Pr
 
 
 VARIABLE_PATTERNS = [
-    r'\{\{(\w+)\}\}',           # {{variable}}
-    r'\{(\w+)\}',               # {variable}
-    r'\$(\w+)',                 # $VARIABLE
-    r'\[(\w+)\]',               # [PLACEHOLDER]
-    r'<(\w+)>',                 # <input>
-    r'__(\w+)__',               # __SLOT__
+    r'\{\{(\w+)\}\}',
+    r'\{(\w+)\}',
+    r'\$(\w+)',
+    r'\[(\w+)\]',
+    r'<(\w+)>',
+    r'__(\w+)__',
 ]
 
 
@@ -29,19 +29,10 @@ def extract_dna(raw_text: str, metadata: Optional[dict] = None) -> PromptDNA:
     Returns:
         PromptDNA object
     """
-    # Generate hash for deduplication
     prompt_hash = hashlib.sha256(raw_text.encode()).hexdigest()
-    
-    # Extract structure
     structure = _extract_structure(raw_text)
-    
-    # Detect variables
     variables = _detect_variables(raw_text)
-    
-    # Extract instructions (basic version, LLM-enhanced later)
     instructions = _extract_instructions(raw_text)
-    
-    # Embedding will be generated separately
     embedding: list[float] = []
     
     return PromptDNA(
@@ -58,22 +49,16 @@ def extract_dna(raw_text: str, metadata: Optional[dict] = None) -> PromptDNA:
 
 def _extract_structure(text: str) -> PromptStructure:
     """Extract structural components"""
-    # Basic parsing - detect system/user/assistant patterns
-    # TODO: Enhance with more sophisticated parsing
-    
     system_message = None
     user_message = text
     assistant_prefill = None
     
-    # Try to detect system message patterns
     if "system:" in text.lower() or "system message:" in text.lower():
-        # Basic extraction - enhance later
         parts = re.split(r'(?i)system\s*:?\s*', text, maxsplit=1)
         if len(parts) > 1:
             system_message = parts[1].split("\n")[0]
             user_message = "\n".join(parts[1].split("\n")[1:]) if len(parts[1].split("\n")) > 1 else parts[1]
     
-    # Estimate tokens (rough: 1 token ≈ 4 characters)
     total_tokens = len(text) // 4
     
     return PromptStructure(
@@ -92,7 +77,6 @@ def _detect_variables(text: str) -> PromptVariables:
         matches = re.findall(pattern, text)
         detected.extend(matches)
     
-    # Remove duplicates while preserving order
     detected = list(dict.fromkeys(detected))
     
     return PromptVariables(
@@ -102,22 +86,18 @@ def _detect_variables(text: str) -> PromptVariables:
 
 
 def _extract_instructions(text: str) -> PromptInstructions:
-    """Extract instructions and constraints (basic version)"""
+    """Extract instructions and constraints"""
     tone = []
     format_type = None
     constraints = []
     examples_count = 0
     
-    # Detect format
     if "json" in text.lower():
         format_type = "JSON"
     elif "markdown" in text.lower():
         format_type = "markdown"
     
-    # Count examples (rough heuristic)
     examples_count = text.count("example") + text.count("Example")
-    
-    # Detect tone keywords
     tone_keywords = {
         "professional": ["professional", "formal", "business"],
         "friendly": ["friendly", "casual", "conversational"],
@@ -129,7 +109,6 @@ def _extract_instructions(text: str) -> PromptInstructions:
         if any(kw in text_lower for kw in keywords):
             tone.append(tone_name)
     
-    # Detect constraints
     if "under" in text_lower and ("word" in text_lower or "token" in text_lower):
         constraints.append("length_limit")
     if "bullet" in text_lower or "list" in text_lower:
