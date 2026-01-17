@@ -251,3 +251,127 @@ class TemplateRepository:
     def count_all(self) -> int:
         """Get total count of templates."""
         return self.db.query(TemplateModel).count()
+
+
+class LineageRepository:
+    """Repository for lineage operations."""
+    
+    def __init__(self, db: Session):
+        self.db = db
+    
+    def create_lineage(
+        self,
+        parent_prompt_id: Optional[str],
+        child_prompt_id: str,
+        mutation_type: str,
+        confidence: float = 0.0,
+    ) -> "LineageModel":
+        """Create a lineage link between parent and child prompts."""
+        from packages.storage.models import Lineage as LineageModel
+        
+        lineage = LineageModel(
+            parent_prompt_id=parent_prompt_id,
+            child_prompt_id=child_prompt_id,
+            mutation_type=mutation_type,
+            confidence=confidence,
+        )
+        self.db.add(lineage)
+        self.db.commit()
+        self.db.refresh(lineage)
+        return lineage
+    
+    def get_lineage_chain(self, prompt_id: str) -> List[dict]:
+        """Get full evolution chain for a prompt (all ancestors and descendants)."""
+        from packages.storage.models import Lineage as LineageModel
+        
+        chain = []
+        visited = set()
+        
+        def traverse_up(current_id: str, path: List[str]):
+            if current_id in visited or current_id is None:
+                return
+            visited.add(current_id)
+            
+            parents = (
+                self.db.query(LineageModel)
+                .filter(LineageModel.child_prompt_id == current_id)
+                .all()
+            )
+            
+            for parent_link in parents:
+                if parent_link.parent_prompt_id:
+                    new_path = [parent_link.parent_prompt_id] + path
+                    chain.append({
+                        "prompt_id": parent_link.parent_prompt_id,
+                        "mutation_type": parent_link.mutation_type,
+                        "confidence": parent_link.confidence,
+                        "created_at": parent_link.created_at.isoformat() if parent_link.created_at else None,
+                        "direction": "ancestor",
+                        "path": new_path,
+                    })
+                    traverse_up(parent_link.parent_prompt_id, new_path)
+        
+        def traverse_down(current_id: str, path: List[str]):
+            if current_id in visited or current_id is None:
+                return
+            visited.add(current_id)
+            
+            children = (
+                self.db.query(LineageModel)
+                .filter(LineageModel.parent_prompt_id == current_id)
+                .all()
+            )
+            
+            for child_link in children:
+                new_path = path + [child_link.child_prompt_id]
+                chain.append({
+                    "prompt_id": child_link.child_prompt_id,
+                    "mutation_type": child_link.mutation_type,
+                    "confidence": child_link.confidence,
+                    "created_at": child_link.created_at.isoformat() if child_link.created_at else None,
+                    "direction": "descendant",
+                    "path": new_path,
+                })
+                traverse_down(child_link.child_prompt_id, new_path)
+        
+        chain.append({
+            "prompt_id": prompt_id,
+            "mutation_type": "root",
+            "confidence": 1.0,
+            "direction": "current",
+            "path": [prompt_id],
+        })
+        
+        visited.clear()
+        traverse_up(prompt_id, [prompt_id])
+        visited.clear()
+        visited.add(prompt_id)
+        traverse_down(prompt_id, [prompt_id])
+        
+        return chain
+    
+    def get_children(self, prompt_id: str) -> List["LineageModel"]:
+        """Get all direct children of a prompt."""
+        from packages.storage.models import Lineage as LineageModel
+        
+        return (
+            self.db.query(LineageModel)
+            .filter(LineageModel.parent_prompt_id == prompt_id)
+            .all()
+        )
+    
+    def get_parents(self, prompt_id: str) -> List["LineageModel"]:
+        """Get all direct parents of a prompt."""
+        from packages.storage.models import Lineage as LineageModel
+        
+        return (
+            self.db.query(LineageModel)
+            .filter(LineageModel.child_prompt_id == prompt_id)
+            .all()
+        )
+    
+    def count_all(self) -> int:
+        """Get total count of lineage links."""
+        from packages.storage.models import Lineage as LineageModel
+        
+        return self.db.query(LineageModel).count()

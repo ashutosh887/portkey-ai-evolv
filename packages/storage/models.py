@@ -77,3 +77,22 @@ class Template(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     family = relationship("PromptFamily", back_populates="templates")
+
+
+class Lineage(Base):
+    """
+    Lineage (Evolution Tracking)
+    Tracks parent-child relationships between prompts to build evolution chains.
+    """
+    __tablename__ = "lineage"
+    
+    lineage_id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    parent_prompt_id = Column(String, ForeignKey("prompt_instances.prompt_id"), nullable=True, index=True)
+    child_prompt_id = Column(String, ForeignKey("prompt_instances.prompt_id"), nullable=False, index=True)
+    mutation_type = Column(String, nullable=False)
+    confidence = Column(Float, default=0.0)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    parent = relationship("PromptInstance", foreign_keys=[parent_prompt_id], backref="children")
+    child = relationship("PromptInstance", foreign_keys=[child_prompt_id], backref="parents")

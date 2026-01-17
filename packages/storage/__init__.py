@@ -7,11 +7,13 @@ from packages.storage.models import (
     PromptFamily,
     PromptInstance,
     Template,
+    Lineage,
 )
 from packages.storage.repositories import (
     PromptRepository,
     FamilyRepository,
     TemplateRepository,
+    LineageRepository,
 )
 
 __all__ = [
@@ -22,7 +24,9 @@ __all__ = [
     "PromptFamily",
     "PromptInstance",
     "Template",
+    "Lineage",
     "PromptRepository",
     "FamilyRepository",
     "TemplateRepository",
+    "LineageRepository",
 ]
