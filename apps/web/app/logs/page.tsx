@@ -23,7 +23,7 @@ export default function LogsPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-6 max-w-[1800px]">
         <div className="mb-6">
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">Log Generator</h1>

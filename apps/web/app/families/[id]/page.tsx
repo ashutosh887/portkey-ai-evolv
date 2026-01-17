@@ -41,7 +41,7 @@ export default function FamilyDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
           <p className="text-muted-foreground">Loading family...</p>
@@ -52,7 +52,7 @@ export default function FamilyDetailPage() {
 
   if (error || !family) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+      <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8 max-w-7xl">
           <Link href="/families">
             <Button variant="ghost" className="mb-6">
@@ -74,7 +74,7 @@ export default function FamilyDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <Link href="/families">
           <Button variant="ghost" className="mb-6">
