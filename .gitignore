@@ -52,6 +52,7 @@ data/
 # Logs
 *.log
 logs/
+!apps/web/app/logs/
 
 # Testing
 .pytest_cache/
