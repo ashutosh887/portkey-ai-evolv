@@ -16,12 +16,14 @@ import logging
 import os
 from typing import Dict, List, Optional
 from datetime import datetime
+import asyncio
 
 from packages.ml_core.config import MLConfig
 from packages.ml_core.embedding import create_embeddings
 from packages.ml_core.clustering import cluster_hdbscan, compute_cluster_centroids
 from packages.storage.database import get_db
 from packages.storage.repositories import PromptRepository, FamilyRepository
+from packages.ml_core.template_generator import TemplateGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +105,7 @@ class FullClassifier:
         self.config = config or MLConfig.from_env()
         logger.info(f"Using embedding model: {self.config.embedding_model}")
     
-    def run(self) -> Dict:
+    async def run(self) -> Dict:
         """
         Run full classification pipeline.
         
@@ -249,6 +251,17 @@ class FullClassifier:
                             print(f"  Assigned {assigned} prompts...")
             
             print(f"✓ Assigned {stats['prompts_assigned']} prompts to families")
+            
+            # Step 8: Generate/Update Templates
+            print("Generating templates for families...")
+            try:
+                template_generator = TemplateGenerator(db)
+                updated_count = await template_generator.process_all_families()
+                print(f"✓ Templates processed: {updated_count} created/updated")
+            except Exception as e:
+                logger.error(f"Template generation failed: {e}")
+                print(f"❌ Template generation failed: {e}")
+
             logger.info(f"Classification complete: {stats}")
             return stats
             
@@ -263,4 +276,4 @@ def run_full_classification():
     """Entry point for CLI command."""
     logging.basicConfig(level=logging.INFO)
     classifier = FullClassifier()
-    return classifier.run()
+    return asyncio.run(classifier.run())

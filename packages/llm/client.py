@@ -13,25 +13,40 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-TEMPLATE_EXTRACTION_PROMPT = """You are analyzing a cluster of similar prompts to extract a canonical template.
+TEMPLATE_EXTRACTION_PROMPT = """You are an expert prompt engineer. Your task is to generalize a list of similar prompts into a single CANONICAL TEMPLATE.
 
-Here are {count} prompts that belong to the same family:
+### Guidelines:
+1. **Analyze Patterns**: Look for static text (intent) vs dynamic text (entities, names, numbers).
+2. **Create Variables**: Replace dynamic parts with {{variable_name}}. Use descriptive names (e.g., {{food_item}}, {{code_language}}, {{target_audience}}).
+3. **Be Specific but Flexible**: The template should cover all provided examples.
+4. **Valid JSON**: Output strictly valid JSON.
 
+### Examples:
+Input:
+- "Compare the nutritional benefits of quinoa and brown rice"
+- "What is better for muscle gain, chicken or beef?"
+Output:
+{{
+  "template": "Compare the nutritional benefits of {{food_1}} and {{food_2}}",
+  "variables": ["food_1", "food_2"]
+}}
+
+Input:
+- "Write a python script to scrape a website"
+- "Write a java program to connect to DB"
+Output:
+{{
+  "template": "Write a {{programming_language}} {{script_type}} to {{task}}",
+  "variables": ["programming_language", "script_type", "task"]
+}}
+
+### Current Data:
+Family Size: {count}
+Prompts:
 {prompts}
 
-Your task:
-1. Identify the COMMON STRUCTURE across all prompts
-2. Identify VARIABLE PARTS (things that change between prompts)
-3. Create a CANONICAL TEMPLATE using {{variable_name}} syntax
-4. Explain WHY these prompts belong together
-
-Output in JSON:
-{{
-  "template": "The canonical template with {{variables}}",
-  "variables": ["variable_name_1", "variable_name_2"],
-  "common_intent": "What these prompts are trying to achieve",
-  "explanation": "Why these prompts form a family"
-}}"""
+### Your Output:
+Provide the JSON solution."""
 
 EXPLANATION_PROMPT = """You are analyzing a cluster of similar prompts to explain why they belong together.
 
@@ -62,6 +77,10 @@ class LLMClient:
             logger.warning("PORTKEY_API_KEY not configured, LLMClient will use fallback")
             return
         
+        if self.virtual_key and "your_virtual_key_here" in self.virtual_key:
+            logger.warning("Ignoring placeholder PORTKEY_VIRTUAL_KEY")
+            self.virtual_key = None
+            
         portkey_config = {"api_key": self.api_key}
         if self.virtual_key:
             portkey_config["virtual_key"] = self.virtual_key
@@ -141,14 +160,28 @@ class LLMClient:
                 temperature=0.0,
             )
             
-            json_match = re.search(r'\{[^{}]*"template"[^{}]*\}', content, re.DOTALL)
-            if json_match:
-                try:
-                    result = json.loads(json_match.group())
-                except json.JSONDecodeError:
-                    result = json.loads(content)
+            # Try to find JSON block
+            content = content.strip()
+            if content.startswith("```json"):
+                content = content.replace("```json", "").replace("```", "").strip()
+            elif content.startswith("```"):
+                content = content.replace("```", "").strip()
+            
+            # Find first { and last }
+            start_idx = content.find("{")
+            end_idx = content.rfind("}")
+            
+            if start_idx != -1 and end_idx != -1:
+                json_str = content[start_idx:end_idx+1]
             else:
-                result = json.loads(content)
+                json_str = content
+
+            try:
+                result = json.loads(json_str)
+            except json.JSONDecodeError as e:
+                logger.error(f"Failed to decode JSON. Raw content: {content[:200]}...")
+                # Try soft repair if needed (simple fallback)
+                result = {"template": content, "variables": []}
             
             template_text = result.get("template", "")
             variables = result.get("variables", [])

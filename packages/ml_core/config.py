@@ -30,7 +30,7 @@ class MLConfig:
     @classmethod
     def from_env(cls) -> "MLConfig":
         return cls(
-            embedding_model=os.getenv("ML_EMBEDDING_MODEL", "bge-large-en"),
+            embedding_model=os.getenv("ML_EMBEDDING_MODEL", "minilm"),
             clustering_algorithm=os.getenv("ML_CLUSTERING_ALGORITHM", "hdbscan"),
             min_cluster_size=int(os.getenv("ML_MIN_CLUSTER_SIZE", "2")),
             similarity_threshold=float(os.getenv("ML_SIMILARITY_THRESHOLD", "0.75")),

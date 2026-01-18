@@ -26,6 +26,7 @@ from packages.ml_core.config import MLConfig
 from packages.ml_core.embedding import EmbeddingModel
 from packages.storage.database import get_db
 from packages.storage.repositories import PromptRepository, FamilyRepository
+from packages.ml_core.template_generator import TemplateGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +95,7 @@ class IncrementalWorker:
         else:
             return None, best_similarity
     
-    def run_cycle(self) -> Dict:
+    async def run_cycle(self) -> Dict:
         """
         Run one cycle of incremental classification.
         
@@ -106,7 +107,8 @@ class IncrementalWorker:
             "processed": 0,
             "assigned": 0,
             "unclustered": 0,
-            "skipped": False
+            "skipped": False,
+            "templates_updated": 0
         }
         
         # Get database session
@@ -130,7 +132,7 @@ class IncrementalWorker:
                 # Import and run full classification
                 from packages.ml_core.full_classifier import FullClassifier
                 classifier = FullClassifier(config=self.config)
-                full_stats = classifier.run()
+                full_stats = await classifier.run()
                 
                 stats["mode"] = "full_classification"
                 stats["processed"] = full_stats.get("prompts_assigned", 0)
@@ -217,6 +219,26 @@ class IncrementalWorker:
             
             family_repo.update_all_member_counts()
             
+            # Step 5: Update templates for affected families
+            if stats["assigned"] > 0:
+                print("   Checking templates for updates...")
+                template_generator = TemplateGenerator(db)
+                affected_families = set()
+                
+                # Re-query recently updated prompts to find affected families
+                # (Slightly inefficient but cleaner than tracking manually above)
+                # Actually, we can just fetch all families that were modified?
+                # For now let's use a simpler approach - just iterate all families
+                # Or better, we should have tracked them. 
+                # Let's rely on TemplateGenerator logic which is fast enough to check.
+                # But to be safe, let's just run process_all_families() as it handles checks efficiently.
+                # Or even better, let's process ONLY families that have > 2 members.
+                
+                updated_count = await template_generator.process_all_families()
+                stats["templates_updated"] = updated_count
+                if updated_count > 0:
+                    print(f"   ✓ Updated {updated_count} templates")
+
             logger.info(f"Cycle complete: {stats}")
             return stats
             
@@ -240,7 +262,7 @@ async def run_worker(interval_minutes: int = 10, batch_size: int = 500):
     
     while True:
         try:
-            stats = worker.run_cycle()
+            stats = await worker.run_cycle()
             
             if not stats["skipped"]:
                 logger.info(f"Processed: {stats['assigned']} assigned, {stats['unclustered']} unclustered")

@@ -119,13 +119,14 @@ class EmbeddingModel:
         indices_to_embed = []
         
         for idx, text in enumerate(texts):
-            cached = self._load_from_cache(text)
-            if cached is not None:
-                embeddings.append(cached)
-            else:
-                embeddings.append(None)
-                texts_to_embed.append(text)
-                indices_to_embed.append(idx)
+            if self.cache_enabled:
+                cached = self._load_from_cache(text)
+                if cached is not None:
+                    embeddings.append(cached)
+                    continue
+            embeddings.append(None)
+            texts_to_embed.append(text)
+            indices_to_embed.append(idx)
         
         if not texts_to_embed:
             return embeddings
@@ -144,7 +145,8 @@ class EmbeddingModel:
                 for j, emb in enumerate(batch_embeddings):
                     idx = indices_to_embed[i + j]
                     embeddings[idx] = emb
-                    self._save_to_cache(texts_to_embed[i + j], emb)
+                    if self.cache_enabled:
+                        self._save_to_cache(texts_to_embed[i + j], emb)
         elif self.model_name == "instructor-xl":
             if instruction is None:
                 instruction = "Represent the instruction prompt:"
@@ -153,7 +155,8 @@ class EmbeddingModel:
             for j, emb in enumerate(batch_embeddings):
                 idx = indices_to_embed[j]
                 embeddings[idx] = emb.tolist()
-                self._save_to_cache(texts_to_embed[j], emb.tolist())
+                if self.cache_enabled:
+                    self._save_to_cache(texts_to_embed[j], emb.tolist())
         else:
             batch_embeddings = self._model.encode(
                 texts_to_embed, 
@@ -164,7 +167,8 @@ class EmbeddingModel:
             for j, emb in enumerate(batch_embeddings):
                 idx = indices_to_embed[j]
                 embeddings[idx] = emb.tolist()
-                self._save_to_cache(texts_to_embed[j], emb.tolist())
+                if self.cache_enabled:
+                    self._save_to_cache(texts_to_embed[j], emb.tolist())
         
         return embeddings
 

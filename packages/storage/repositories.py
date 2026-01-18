@@ -97,12 +97,23 @@ class PromptRepository:
         return [(r.prompt_id, r.simhash) for r in results]
     
     def get_pending(self, limit: int = 100) -> List[PromptInstanceModel]:
-        """Get prompts that haven't been assigned to a family"""
+        """Get pending (unprocessed) prompts."""
         return (
             self.db.query(PromptInstanceModel)
-            .filter(PromptInstanceModel.family_id.is_(None))
+            .filter(PromptInstanceModel.embedding_vector == None)
             .limit(limit)
             .all()
+        )
+
+    def count_new_members_since(self, family_id: str, since: datetime) -> int:
+        """Count members added to a family after a specific timestamp."""
+        return (
+            self.db.query(PromptInstanceModel)
+            .filter(
+                PromptInstanceModel.family_id == family_id,
+                PromptInstanceModel.created_at > since
+            )
+            .count()
         )
     
     def update_family(self, prompt_id: str, family_id: str) -> None:
@@ -174,6 +185,15 @@ class PromptRepository:
     def count_all(self) -> int:
         """Get total count of prompts."""
         return self.db.query(PromptInstanceModel).count()
+    
+    def clear_all_embeddings(self) -> int:
+        """Clear all embedding vectors (use when switching embedding models)."""
+        count = self.db.query(PromptInstanceModel).filter(
+            PromptInstanceModel.embedding_vector != None,
+            PromptInstanceModel.embedding_vector != []
+        ).update({PromptInstanceModel.embedding_vector: []})
+        self.db.commit()
+        return count
     
     def count_pending(self) -> int:
         """Get count of prompts without family assignment."""
@@ -375,6 +395,27 @@ class TemplateRepository:
     def count_all(self) -> int:
         """Get total count of templates."""
         return self.db.query(TemplateModel).count()
+
+    def update_template(
+        self,
+        template_id: str,
+        template_text: str,
+        slots: dict,
+    ) -> Optional[TemplateModel]:
+        """Update an existing template with new text/slots."""
+        template = (
+            self.db.query(TemplateModel)
+            .filter(TemplateModel.template_id == template_id)
+            .first()
+        )
+        if template:
+            template.template_text = template_text
+            template.slots = slots
+            template.template_version += 1
+            template.updated_at = datetime.utcnow()
+            self.db.commit()
+            self.db.refresh(template)
+        return template
 
 
 class LineageRepository:
