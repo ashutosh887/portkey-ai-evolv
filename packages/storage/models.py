@@ -23,11 +23,21 @@ class PromptFamily(Base):
     centroid_vector = Column(JSON)
     version = Column(Integer, default=1)
     
+    # Template update tracking (threshold-based trigger)
+    member_count_at_last_template = Column(Integer, default=0)  # Count when last template was generated
+    needs_template_update = Column(Boolean, default=True, index=True)  # Flag for pending update
+    template_update_threshold = Column(Integer, default=5)  # How many new prompts trigger update
+    
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     members = relationship("PromptInstance", back_populates="family")
     templates = relationship("Template", back_populates="family")
+    
+    def check_needs_template_update(self) -> bool:
+        """Check if family needs a template update based on threshold."""
+        new_members = self.member_count - self.member_count_at_last_template
+        return new_members >= self.template_update_threshold or self.needs_template_update
 
 
 class PromptInstance(Base):
@@ -61,17 +71,33 @@ class Template(Base):
     """
     Template (Extracted Template Level)
     Stores the canonical prompt templates derived from each family.
+    
+    IMMUTABLE VERSIONING: Each new version creates a NEW ROW with parent_template_id
+    pointing to the previous version. This preserves full history.
     """
     __tablename__ = "templates"
     
     template_id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     family_id = Column(String, ForeignKey("prompt_families.family_id"), nullable=False, index=True)
     
-    template_text = Column(Text, nullable=False)
-    slots = Column(JSON, default={})
+    # Version tracking (immutable - new row per version)
+    parent_template_id = Column(String, ForeignKey("templates.template_id"), nullable=True, index=True)
+    is_active = Column(Boolean, default=True, index=True)  # Current "live" version
     
-    template_version = Column(Integer, default=1)
+    template_text = Column(Text, nullable=False)
+    slots = Column(JSON, default={})  # Slot definitions
+    
+    # Semantic versioning
+    version_major = Column(Integer, default=1)
+    version_minor = Column(Integer, default=0)
+    version_patch = Column(Integer, default=0)
+    
+    # Quality and refinement
     quality_score = Column(Float)
+    is_refined = Column(Boolean, default=False)  # True if LLM-refined
+    
+    # Intent mapping
+    intent_embedding = Column(JSON)  # Vector for intent matching
     
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

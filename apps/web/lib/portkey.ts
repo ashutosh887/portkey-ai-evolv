@@ -62,16 +62,16 @@ export const generateLog = async (
   useMock: boolean = false
 ): Promise<GenerateLogResult> => {
   const startTime = Date.now()
-  
+
   if (useMock || MOCK_MODE) {
     await new Promise((resolve) => setTimeout(resolve, 20 + Math.random() * 30))
     const mockResponse = generateMockResponse(prompt)
     const estimatedTokens = Math.floor(prompt.length / 4) + Math.floor(mockResponse.length / 4)
     const latency = Date.now() - startTime
-    
+
     const mockCache = Math.random() > 0.7 ? 'hit' : 'miss'
     const mockRetry = Math.random() > 0.9 ? { success: true, tries: 2 } : 'not_triggered'
-    
+
     return {
       success: true,
       content: mockResponse,
@@ -245,4 +245,179 @@ export const generateBatchLogs = async (
   }
 
   return results
+}
+
+// Prompt categories for LLM-based generation
+const PROMPT_CATEGORIES = [
+  'summarization',
+  'code generation',
+  'translation',
+  'explanation',
+  'creative writing',
+  'data analysis',
+  'email drafting',
+  'question answering',
+  'debugging',
+  'format conversion',
+  'brainstorming',
+  'comparison',
+  'recommendation',
+  'research',
+  'review writing',
+]
+
+// Generate a random prompt using LLM
+export const generateRandomPrompt = async (useMock: boolean = false): Promise<string> => {
+  const category = PROMPT_CATEGORIES[Math.floor(Math.random() * PROMPT_CATEGORIES.length)]
+
+  if (useMock) {
+    // Mock mode: generate from predefined dynamic templates
+    const mockPrompts: Record<string, string[]> = {
+      summarization: [
+        'Summarize the quarterly earnings report',
+        'Give me a TL;DR of the meeting notes',
+        'Summarize this research paper abstract',
+        'Condense this blog post into 3 key points',
+        'Brief summary of the product launch announcement',
+      ],
+      'code generation': [
+        'Write a React hook for infinite scroll',
+        'Create a Python decorator for rate limiting',
+        'Implement a debounce function in TypeScript',
+        'Write a SQL query for user segmentation',
+        'Generate a REST API endpoint for user auth',
+      ],
+      translation: [
+        'Translate this marketing copy to Spanish',
+        'Convert this technical doc to French',
+        'Translate the error messages to German',
+        'Help translate UI text to Japanese',
+        'Translate the privacy policy to Portuguese',
+      ],
+      explanation: [
+        'Explain microservices architecture simply',
+        'What is event-driven programming?',
+        'Explain OAuth 2.0 to a beginner',
+        'How does garbage collection work?',
+        'Describe containerization in simple terms',
+      ],
+      'creative writing': [
+        'Write a product tagline for a fitness app',
+        'Create a social media post about AI',
+        'Write copy for a landing page hero section',
+        'Generate a newsletter intro paragraph',
+        'Write a press release headline',
+      ],
+      'data analysis': [
+        'Analyze the website traffic patterns',
+        'Find correlations in customer churn data',
+        'Identify seasonality in sales data',
+        'Summarize the A/B test results',
+        'Extract insights from survey responses',
+      ],
+      'email drafting': [
+        'Write a cold outreach email for sales',
+        'Draft a project status update email',
+        'Compose a partnership proposal email',
+        'Write a customer feedback request email',
+        'Create an event invitation email',
+      ],
+      'question answering': [
+        'What are the benefits of TypeScript over JavaScript?',
+        'How does caching improve API performance?',
+        'What is the difference between SQL and NoSQL?',
+        'When should I use WebSockets vs REST?',
+        'What are best practices for API versioning?',
+      ],
+      debugging: [
+        'Why am I getting CORS errors in my React app?',
+        'Debug this Promise rejection issue',
+        'Fix the race condition in this async code',
+        'Help troubleshoot the memory leak',
+        'Why is my GraphQL query returning null?',
+      ],
+      'format conversion': [
+        'Convert this XML configuration to JSON',
+        'Transform the API response to TypeScript types',
+        'Convert these requirements to user stories',
+        'Transform the data model to Prisma schema',
+        'Convert the SQL query to MongoDB aggregation',
+      ],
+      brainstorming: [
+        'Generate 5 feature ideas for a productivity app',
+        'Brainstorm names for a developer tool',
+        'Suggest improvements for the onboarding flow',
+        'List ways to improve API documentation',
+        'Ideas for reducing deployment time',
+      ],
+      comparison: [
+        'Compare React vs Vue for a new project',
+        'PostgreSQL vs MongoDB for this use case',
+        'REST vs GraphQL for our API',
+        'Kubernetes vs Docker Swarm comparison',
+        'Compare serverless vs containers',
+      ],
+      recommendation: [
+        'Recommend a state management library for React',
+        'Suggest the best testing framework for Node.js',
+        'What CI/CD tool should we use?',
+        'Recommend a monitoring solution for microservices',
+        'Best practices for database indexing',
+      ],
+      research: [
+        'Research current trends in AI observability',
+        'Find information about vector databases',
+        'Research best practices for prompt engineering',
+        'Look up LLM cost optimization techniques',
+        'Research semantic search implementations',
+      ],
+      'review writing': [
+        'Write a code review comment for this PR',
+        'Draft a technical design review feedback',
+        'Create a security review checklist',
+        'Write performance review notes',
+        'Generate documentation review comments',
+      ],
+    }
+
+    const prompts = mockPrompts[category] || mockPrompts['question answering']
+    return prompts[Math.floor(Math.random() * prompts.length)]
+  }
+
+  // Real mode: Use LLM to generate a prompt
+  try {
+    const headers = getPortkeyHeaders()
+    const systemPrompt = `You are a prompt generator. Generate ONE short, realistic prompt that a user might send to an AI assistant.
+The prompt should be in the category: ${category}
+Requirements:
+- Keep it under 50 words
+- Make it specific and actionable
+- No meta-commentary, just the prompt itself
+- Vary the style and topic`
+
+    const response = await fetch(`${PORTKEY_GATEWAY_URL}/chat/completions`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: `Generate a ${category} prompt:` }
+        ],
+        max_tokens: 100,
+        temperature: 1.0,
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to generate prompt')
+    }
+
+    const data = await response.json()
+    return data.choices?.[0]?.message?.content?.trim() || 'What is the best approach for this task?'
+  } catch (error) {
+    console.error('Error generating prompt:', error)
+    // Fallback to a generic prompt
+    return `Can you help me with ${category}?`
+  }
 }

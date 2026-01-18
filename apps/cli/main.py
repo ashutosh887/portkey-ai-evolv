@@ -522,5 +522,62 @@ def portkey_worker(
         typer.echo("\n🛑 Worker stopped.")
 
 
+@app.command("full-classify")
+def full_classify():
+    """
+    Run full HDBSCAN classification on all prompts.
+    
+    This is the WEEKLY job that:
+    - Embeds all prompts
+    - Runs HDBSCAN clustering
+    - Creates/updates PromptFamily records
+    - Updates all family assignments
+    """
+    from packages.ml_core.full_classifier import run_full_classification
+    
+    typer.echo("🧠 Starting Full Classification (HDBSCAN)...")
+    typer.echo("This may take a while depending on the number of prompts.\n")
+    
+    try:
+        stats = run_full_classification()
+        
+        typer.echo("\n✅ Full Classification Complete!")
+        typer.echo(f"   Total prompts: {stats['total_prompts']}")
+        typer.echo(f"   Newly embedded: {stats['embedded']}")
+        typer.echo(f"   Clusters created: {stats['clusters_created']}")
+        typer.echo(f"   Prompts assigned: {stats['prompts_assigned']}")
+        typer.echo(f"   Unclustered: {stats['unclustered']}")
+    except Exception as e:
+        typer.echo(f"❌ Error: {str(e)}", err=True)
+        raise typer.Exit(1)
+
+
+@app.command("classify-worker")
+def classify_worker(
+    interval: int = typer.Option(10, help="Classification interval in minutes"),
+    batch_size: int = typer.Option(500, help="Minimum prompts to trigger processing"),
+):
+    """
+    Run the incremental classification worker.
+    
+    This is the DAILY job that:
+    - Checks for new prompts every X minutes
+    - Assigns new prompts to existing families
+    - Uses centroids from full-classify
+    """
+    import asyncio
+    from packages.ml_core.incremental_worker import run_worker
+    
+    typer.echo(f"🧠 Starting Incremental Classification Worker...")
+    typer.echo(f"   Interval: every {interval} min")
+    typer.echo(f"   Batch size: {batch_size} prompts minimum")
+    typer.echo(f"   Loading embedding model (this may take a minute on first run)...\n")
+    
+    try:
+        asyncio.run(run_worker(interval_minutes=interval, batch_size=batch_size))
+    except KeyboardInterrupt:
+        typer.echo("\n🛑 Worker stopped.")
+
+
 if __name__ == "__main__":
     app()

@@ -18,10 +18,19 @@ except ImportError:
 
 
 class EmbeddingModel:
-    def __init__(self, model_name: str, cache_dir: str = "./cache", portkey_api_key: Optional[str] = None, portkey_virtual_key: Optional[str] = None):
+    def __init__(
+        self, 
+        model_name: str, 
+        cache_dir: str = "./cache", 
+        cache_enabled: bool = False,  # Disabled by default - embeddings stored in DB
+        portkey_api_key: Optional[str] = None, 
+        portkey_virtual_key: Optional[str] = None
+    ):
         self.model_name = model_name
+        self.cache_enabled = cache_enabled
         self.cache_dir = Path(cache_dir)
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        if cache_enabled:
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
         self._model = None
         self._portkey_client = None
         self.portkey_api_key = portkey_api_key or os.getenv("PORTKEY_API_KEY")
@@ -52,7 +61,10 @@ class EmbeddingModel:
         if self._model is not None:
             return
         
-        if self.model_name == "bge-large-en":
+        if self.model_name == "minilm":
+            # Small and fast model (~80MB), good for low-memory systems
+            self._model = SentenceTransformer('all-MiniLM-L6-v2')
+        elif self.model_name == "bge-large-en":
             self._model = SentenceTransformer('BAAI/bge-large-en-v1.5')
         elif self.model_name == "instructor-xl":
             if INSTRUCTOR is None:
@@ -73,9 +85,11 @@ class EmbeddingModel:
             raise ValueError(f"Unknown embedding model: {self.model_name}")
     
     def embed(self, text: str, instruction: Optional[str] = None) -> List[float]:
-        cached = self._load_from_cache(text)
-        if cached is not None:
-            return cached
+        # Check cache if enabled
+        if self.cache_enabled:
+            cached = self._load_from_cache(text)
+            if cached is not None:
+                return cached
         
         self._load_model()
         
@@ -94,7 +108,9 @@ class EmbeddingModel:
         else:
             embedding = self._model.encode(text, normalize_embeddings=True).tolist()
         
-        self._save_to_cache(text, embedding)
+        # Save to cache if enabled
+        if self.cache_enabled:
+            self._save_to_cache(text, embedding)
         return embedding
     
     def embed_batch(self, texts: List[str], instruction: Optional[str] = None, batch_size: int = 32) -> List[List[float]]:
