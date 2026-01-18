@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -18,7 +18,7 @@ export default function PromptsPage() {
   const [page, setPage] = useState(1)
   const limit = config.pagination.listPages.default
 
-  const loadPrompts = async () => {
+  const loadPrompts = useCallback(async () => {
     try {
       setError(null)
       const offset = (page - 1) * limit
@@ -32,11 +32,11 @@ export default function PromptsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [page, limit])
 
   useEffect(() => {
     loadPrompts()
-  }, [page])
+  }, [loadPrompts])
 
   if (loading && prompts.length === 0) {
     return (

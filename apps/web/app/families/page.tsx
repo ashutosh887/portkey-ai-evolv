@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -18,7 +18,7 @@ export default function FamiliesPage() {
   const [page, setPage] = useState(1)
   const limit = config.pagination.listPages.default
 
-  const loadFamilies = async () => {
+  const loadFamilies = useCallback(async () => {
     try {
       setError(null)
       const offset = (page - 1) * limit
@@ -32,11 +32,11 @@ export default function FamiliesPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [page, limit])
 
   useEffect(() => {
     loadFamilies()
-  }, [page])
+  }, [loadFamilies])
 
   if (loading && families.length === 0) {
     return (

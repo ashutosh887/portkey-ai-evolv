@@ -116,7 +116,7 @@ export default function LogGenerator({
       }
 
       const logEntry: LogEntry = {
-        id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
         timestamp: new Date().toISOString(),
         prompt,
         response: result.content || '',
@@ -143,7 +143,7 @@ export default function LogGenerator({
       const errorMessage = error.message || 'Unknown error'
       setError(errorMessage)
       const logEntry: LogEntry = {
-        id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
         timestamp: new Date().toISOString(),
         prompt,
         response: '',
@@ -185,7 +185,7 @@ export default function LogGenerator({
           const result = await generateLog(randomPrompt, model, useMock)
 
           const logEntry: LogEntry = {
-            id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
             timestamp: new Date().toISOString(),
             prompt: randomPrompt,
             response: result.success ? (result.content || '') : (result.error || 'Error'),
@@ -206,7 +206,7 @@ export default function LogGenerator({
           onLogGenerated(logEntry)
         } catch (error: any) {
           const logEntry: LogEntry = {
-            id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
             timestamp: new Date().toISOString(),
             prompt: randomPrompt,
             response: '',

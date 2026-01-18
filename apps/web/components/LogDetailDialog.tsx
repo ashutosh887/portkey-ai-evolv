@@ -44,7 +44,7 @@ export default function LogDetailDialog({
       if (result.success && onReplay) {
         const replayedLog: LogEntry = {
           ...log,
-          id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
           timestamp: new Date().toISOString(),
           response: result.content || '',
           model: cleanModel,
@@ -114,6 +114,7 @@ export default function LogDetailDialog({
                 variant="outline"
                 size="sm"
                 onClick={handleCopy}
+                aria-label={copied ? 'Copied to clipboard' : 'Copy log to clipboard'}
               >
                 {copied ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
               </Button>
@@ -122,6 +123,7 @@ export default function LogDetailDialog({
                 size="sm"
                 onClick={handleReplay}
                 disabled={isReplaying || log.model.includes('mock')}
+                aria-label="Replay this log"
               >
                 <Play className="h-4 w-4 mr-2" />
                 {isReplaying ? 'Replaying...' : 'Replay'}

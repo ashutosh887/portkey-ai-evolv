@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -19,7 +19,7 @@ export default function DashboardPage() {
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setError(null)
       const [statsData, familiesData, promptsData, templatesData] = await Promise.all([
@@ -39,7 +39,7 @@ export default function DashboardPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   const handleProcess = async () => {
     setProcessing(true)
@@ -60,7 +60,7 @@ export default function DashboardPage() {
     loadData()
     const interval = setInterval(loadData, config.processing.autoRefreshInterval)
     return () => clearInterval(interval)
-  }, [])
+  }, [loadData])
 
   if (loading) {
     return (

@@ -138,6 +138,15 @@ export default function LiveLogs({ logs, isGenerating, totalGenerated, onReplay 
                     key={log.id}
                     className="border-l-4 border-l-blue-500 cursor-pointer hover:bg-muted/50 transition-colors active:scale-[0.99]"
                     onClick={() => handleLogClick(log)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        handleLogClick(log)
+                      }
+                    }}
+                    aria-label={`View log details for ${log.prompt.substring(0, 50)}...`}
                   >
                     <CardContent className="pt-3 pb-3">
                       <div className="flex items-start justify-between gap-2 mb-2">

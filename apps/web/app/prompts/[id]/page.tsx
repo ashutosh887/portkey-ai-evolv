@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -20,7 +20,7 @@ export default function PromptDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const loadPrompt = async () => {
+  const loadPrompt = useCallback(async () => {
     try {
       setError(null)
       const [promptData, lineageData] = await Promise.all([
@@ -36,13 +36,13 @@ export default function PromptDetailPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [promptId])
 
   useEffect(() => {
     if (promptId) {
       loadPrompt()
     }
-  }, [promptId])
+  }, [promptId, loadPrompt])
 
   if (loading) {
     return (

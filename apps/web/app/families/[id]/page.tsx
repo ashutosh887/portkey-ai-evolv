@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -20,7 +20,7 @@ export default function FamilyDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const loadFamily = async () => {
+  const loadFamily = useCallback(async () => {
     try {
       setError(null)
       const data = await api.family(familyId)
@@ -34,13 +34,13 @@ export default function FamilyDetailPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [familyId])
 
   useEffect(() => {
     if (familyId) {
       loadFamily()
     }
-  }, [familyId])
+  }, [familyId, loadFamily])
 
   if (loading) {
     return (
