@@ -28,6 +28,9 @@ Evolv ingests prompts from production systems, extracts their structural DNA (va
 # Install Python dependencies
 uv sync
 
+# Initialize database (required on first run)
+uv run python scripts/init_db.py
+
 # Install web app dependencies
 cd apps/web
 npm install
@@ -44,7 +47,7 @@ API available at `http://localhost:8000` with docs at `/docs`.
 ### Use the CLI
 
 ```bash
-uv run genome ingest data/prompts.json  # Ingest prompts
+uv run genome ingest examples/prompt.csv  # Ingest prompts
 uv run genome run                        # Process pending
 uv run genome families                  # List families
 uv run genome evolve <prompt_id>        # Show evolution chain
@@ -67,6 +70,13 @@ Monorepo structure with:
 - **apps/cli** – Command-line interface
 - **apps/web** – Next.js dashboard and log generator
 - **packages/** – Core logic (ingestion, DNA extraction, clustering, storage)
+
+### Key Technologies
+
+- **ML/NLP**: sentence-transformers (embeddings), HDBSCAN (clustering)
+- **Database**: SQLAlchemy with SQLite (upgradeable to PostgreSQL)
+- **LLM**: Portkey SDK with automatic fallback
+- **Deduplication**: SHA-256 (exact) and SimHash (near-duplicates)
 
 ## Environment Variables
 
@@ -104,6 +114,31 @@ Logs generated are automatically sent to Portkey observability and can be ingest
 ## Why This Matters
 
 Prompts are production infrastructure. They evolve, mutate, and accumulate technical debt. Evolv makes them observable, versioned, and governable.
+
+## API Endpoints
+
+Main endpoints:
+- `POST /ingest` – Upload file (JSON/CSV/TXT) and process prompts
+- `POST /ingest/portkey` – Trigger Portkey ingestion
+- `GET /families` – List all families
+- `GET /families/{id}` – Get family details with members and template
+- `GET /prompts` – List prompts
+- `GET /prompts/{id}/lineage` – Get evolution chain
+- `POST /process` – Trigger batch processing
+- `GET /stats` – System statistics
+
+Visit `/docs` for interactive API documentation (Swagger UI).
+
+## Deployment
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
+
+**Quick deploy options**: Railway, Render, Fly.io, Docker
+
+## Additional Documentation
+
+- **[Script.md](./Script.md)** – Complete architecture and implementation details
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** – Deployment guide
 
 ---
 
