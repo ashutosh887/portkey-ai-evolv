@@ -105,6 +105,14 @@ Logs generated are automatically sent to Portkey observability and can be ingest
 
 Prompts are production infrastructure. They evolve, mutate, and accumulate technical debt. Evolv makes them observable, versioned, and governable.
 
+## Team
+
+This project was built by Team 1 at [Portkey AI Builder Challenge](https://hackculture.io/hackathons/portkey-ai-builder-challenge):
+
+- **[Ashutosh Jha](https://github.com/ashutosh887)**
+- **[Dhanush U](https://github.com/Dhanush834)**
+- **[Ravjot Singh](https://github.com/ravjot07)**
+
 ---
 
 **Built for AI Builders Challenge by [Portkey AI](https://github.com/Portkey-AI/).**
