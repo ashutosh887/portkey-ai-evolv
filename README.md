@@ -129,16 +129,10 @@ Main endpoints:
 
 Visit `/docs` for interactive API documentation (Swagger UI).
 
-## Deployment
-
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
-
-**Quick deploy options**: Railway, Render, Fly.io, Docker
-
 ## Additional Documentation
 
-- **[Script.md](./Script.md)** – Complete architecture and implementation details
-- **[DEPLOYMENT.md](./DEPLOYMENT.md)** – Deployment guide
+- **[docs/ml-algorithms.md](./docs/ml-algorithms.md)** – ML core algorithms and pipeline explanation
+- **[docs/database-integration.md](./docs/database-integration.md)** – Database integration architecture and design
 
 ---
 
