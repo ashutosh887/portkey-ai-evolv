@@ -1,0 +1,19 @@
+# Render Blueprint: https://render.com/docs/blueprint-spec
+# Use this if you want a single config file. Otherwise set the same in the dashboard.
+
+services:
+  - type: web
+    name: evolv-api
+    runtime: docker
+    dockerfilePath: ./infra/Dockerfile
+    dockerContext: .
+    # Render sets PORT automatically; Dockerfile CMD must use ${PORT}
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: PORTKEY_API_KEY
+        sync: false
+      - key: PORTKEY_VIRTUAL_KEY
+        sync: false
+    # Optional: run DB init before start (if using SQLite and no init in image)
+    # healthCheckPath: /health
