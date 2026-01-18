@@ -142,11 +142,11 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
 
 ---
 
-**Built for AI Builders Challenge by [Portkey AI](https://github.com/Portkey-AI/).**
+**Built on [Portkey](https://portkey.ai/)**
 
 ## Team
 
-This project was built by Team 1 at [Portkey AI Builder Challenge](https://hackculture.io/hackathons/portkey-ai-builder-challenge):
+This project won first prize at the [Portkey AI Builder Challenge](https://hackculture.io/hackathons/portkey-ai-builder-challenge) and was built by:
 
 - **[Ashutosh Jha](https://github.com/ashutosh887)**
 - **[Dhanush U](https://github.com/Dhanush834)**
