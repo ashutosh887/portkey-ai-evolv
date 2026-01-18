@@ -5,7 +5,8 @@ import os
 
 @dataclass
 class MLConfig:
-    embedding_model: Literal["bge-large-en", "instructor-xl", "text-embedding-3-large"] = "bge-large-en"
+    # Changed default to MiniLM (80MB) instead of BGE-large (1.34GB) to avoid memory issues
+    embedding_model: Literal["minilm", "bge-large-en", "instructor-xl", "text-embedding-3-large"] = "minilm"
     clustering_algorithm: Literal["hdbscan", "kmeans"] = "hdbscan"
     min_cluster_size: int = 2
     min_samples: int = 1
@@ -29,7 +30,7 @@ class MLConfig:
     @classmethod
     def from_env(cls) -> "MLConfig":
         return cls(
-            embedding_model=os.getenv("ML_EMBEDDING_MODEL", "bge-large-en"),
+            embedding_model=os.getenv("ML_EMBEDDING_MODEL", "minilm"),
             clustering_algorithm=os.getenv("ML_CLUSTERING_ALGORITHM", "hdbscan"),
             min_cluster_size=int(os.getenv("ML_MIN_CLUSTER_SIZE", "2")),
             similarity_threshold=float(os.getenv("ML_SIMILARITY_THRESHOLD", "0.75")),

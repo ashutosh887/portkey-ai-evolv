@@ -522,5 +522,168 @@ def portkey_worker(
         typer.echo("\n🛑 Worker stopped.")
 
 
+@app.command("full-classify")
+def full_classify():
+    """
+    Run full HDBSCAN classification on all prompts.
+    
+    This is the WEEKLY job that:
+    - Embeds all prompts
+    - Runs HDBSCAN clustering
+    - Creates/updates PromptFamily records
+    - Updates all family assignments
+    """
+    from packages.ml_core.full_classifier import run_full_classification
+    
+    typer.echo("🧠 Starting Full Classification (HDBSCAN)...")
+    typer.echo("This may take a while depending on the number of prompts.\n")
+    
+    try:
+        stats = run_full_classification()
+        
+        typer.echo("\n✅ Full Classification Complete!")
+        typer.echo(f"   Total prompts: {stats['total_prompts']}")
+        typer.echo(f"   Newly embedded: {stats['embedded']}")
+        typer.echo(f"   Clusters created: {stats['clusters_created']}")
+        typer.echo(f"   Prompts assigned: {stats['prompts_assigned']}")
+        typer.echo(f"   Unclustered: {stats['unclustered']}")
+    except Exception as e:
+        typer.echo(f"❌ Error: {str(e)}", err=True)
+        raise typer.Exit(1)
+
+
+@app.command("clear-embeddings")
+def clear_embeddings():
+    """
+    Clear all embedding vectors from the database.
+    
+    Use this when switching embedding models to avoid dimension mismatch errors.
+    After clearing, run full-classify to re-embed all prompts.
+    """
+    from packages.storage.database import get_db
+    from packages.storage.repositories import PromptRepository
+    
+    typer.echo("⚠️  This will clear ALL embedding vectors from the database.")
+    confirm = typer.confirm("Are you sure you want to continue?")
+    
+    if not confirm:
+        typer.echo("Aborted.")
+        raise typer.Exit(0)
+    
+    db_gen = get_db()
+    db = next(db_gen)
+    try:
+        prompt_repo = PromptRepository(db)
+        cleared = prompt_repo.clear_all_embeddings()
+        typer.echo(f"✅ Cleared {cleared} embeddings.")
+        typer.echo("💡 Now run: python -m apps.cli.main full-classify")
+    finally:
+        try:
+            next(db_gen)
+        except StopIteration:
+            pass
+
+
+@app.command("classify-worker")
+def classify_worker(
+    interval: int = typer.Option(10, help="Classification interval in minutes"),
+    batch_size: int = typer.Option(500, help="Minimum prompts to trigger processing"),
+):
+    """
+    Run the incremental classification worker.
+    
+    This is the DAILY job that:
+    - Checks for new prompts every X minutes
+    - Assigns new prompts to existing families
+    - Uses centroids from full-classify
+    """
+    import asyncio
+    from packages.ml_core.incremental_worker import run_worker
+    
+    typer.echo(f"🧠 Starting Incremental Classification Worker...")
+    typer.echo(f"   Interval: every {interval} min")
+    typer.echo(f"   Batch size: {batch_size} prompts minimum")
+    typer.echo(f"   Loading embedding model (this may take a minute on first run)...\n")
+    
+    try:
+        asyncio.run(run_worker(interval_minutes=interval, batch_size=batch_size))
+    except KeyboardInterrupt:
+        typer.echo("\n🛑 Worker stopped.")
+
+
+@app.command("migrate-db")
+def migrate_db():
+    """
+    Apply manual schema migrations (Fix for missing columns).
+    """
+    from packages.storage.database import get_db
+    from sqlalchemy import text
+    
+    typer.echo("🔄 Checking database schema...")
+    
+    db_gen = get_db()
+    db = next(db_gen)
+    try:
+        # Check if column exists
+        try:
+            db.execute(text("SELECT member_count_at_creation FROM templates LIMIT 1"))
+            typer.echo("✅ Column 'member_count_at_creation' already exists.")
+        except Exception:
+            typer.echo("⚠️  Column 'member_count_at_creation' missing. Adding it...")
+            db.execute(text("ALTER TABLE templates ADD COLUMN member_count_at_creation INTEGER DEFAULT 0"))
+            db.commit()
+            typer.echo("✅ Successfully added column 'member_count_at_creation'.")
+            
+    except Exception as e:
+        typer.echo(f"❌ Migration failed: {str(e)}", err=True)
+        raise typer.Exit(1)
+    finally:
+        try:
+            next(db_gen)
+        except StopIteration:
+            pass
+
+
+@app.command("update-templates")
+def update_templates():
+    """
+    Job to analyze ALL families and generate/update templates.
+    """
+    typer.echo("🚀 Starting Template Update Job...")
+    typer.echo("   Loading modules...")
+    
+    import asyncio
+    try:
+        from packages.storage.database import get_db
+        from packages.ml_core.template_generator import TemplateGenerator
+        typer.echo("   Modules loaded.")
+    except Exception as e:
+        typer.echo(f"❌ Error loading modules: {e}")
+        raise typer.Exit(1)
+    
+    db_gen = get_db()
+    db = next(db_gen)
+    try:
+        template_generator = TemplateGenerator(db)
+        typer.echo("   Scanning families...")
+        
+        # We need async loop
+        updated_count = asyncio.run(template_generator.process_all_families())
+        
+        if updated_count > 0:
+            typer.echo(f"\n✅ Successfully created/updated {updated_count} templates.")
+        else:
+            typer.echo("\n✨ No templates needed updates.")
+            
+    except Exception as e:
+        typer.echo(f"❌ Error during template updates: {str(e)}", err=True)
+        raise typer.Exit(1)
+    finally:
+        try:
+            next(db_gen)
+        except StopIteration:
+            pass
+
+
 if __name__ == "__main__":
     app()

@@ -68,8 +68,7 @@ class Template(Base):
     family_id = Column(String, ForeignKey("prompt_families.family_id"), nullable=False, index=True)
     
     template_text = Column(Text, nullable=False)
-    slots = Column(JSON, default={})
-    
+    slots = Column(JSON, default={})  # Slot definitions: {variables: [...], example_values: {...}}
     template_version = Column(Integer, default=1)
     quality_score = Column(Float)
     

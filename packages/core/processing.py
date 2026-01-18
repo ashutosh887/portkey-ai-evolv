@@ -9,9 +9,10 @@ from packages.clustering.engine import compute_confidence
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from packages.storage.repositories import LineageRepository
+    from packages.storage.repositories import LineageRepository, PromptRepository, FamilyRepository
 from packages.llm import MockLLMClient, LLMClient
-from packages.storage import PromptRepository, FamilyRepository, LineageRepository
+# Import directly from module files to avoid circular import via packages.storage.__init__
+from packages.storage.repositories import PromptRepository, FamilyRepository, LineageRepository
 from packages.ingestion import normalize_text, compute_hash
 
 logger = logging.getLogger(__name__)

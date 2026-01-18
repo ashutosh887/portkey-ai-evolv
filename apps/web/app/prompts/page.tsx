@@ -101,11 +101,9 @@ export default function PromptsPage() {
                       <p className="text-sm mb-3 line-clamp-2">{prompt.original_text}</p>
                       <div className="flex items-center gap-2 flex-wrap">
                         {prompt.family_id && (
-                          <Link href={`/families/${prompt.family_id}`}>
-                            <Badge variant="secondary" className="hover:bg-secondary/80">
-                              Family
-                            </Badge>
-                          </Link>
+                          <Badge variant="secondary">
+                            Family
+                          </Badge>
                         )}
                         {prompt.lineage?.has_lineage && (
                           <Badge variant="outline">
@@ -113,9 +111,9 @@ export default function PromptsPage() {
                             Lineage ({prompt.lineage.total_links} links)
                           </Badge>
                         )}
-                        {prompt.dna?.variables.detected.length > 0 && (
+                        {(prompt.dna?.variables?.detected?.length ?? 0) > 0 && (
                           <Badge variant="outline">
-                            {prompt.dna.variables.detected.length} variables
+                            {prompt.dna?.variables?.detected?.length} variables
                           </Badge>
                         )}
                         <span className="text-xs text-muted-foreground ml-auto">

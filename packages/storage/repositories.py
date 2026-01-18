@@ -3,19 +3,18 @@ Repository pattern for database operations
 """
 
 import uuid
-from typing import Optional, List, TYPE_CHECKING
+from typing import Optional, List, TYPE_CHECKING, Dict
 from sqlalchemy.orm import Session
 from packages.storage.models import (
     PromptInstance as PromptInstanceModel,
     PromptFamily as PromptFamilyModel,
     Template as TemplateModel,
 )
-from packages.core.models import PromptInstance as PromptInstanceDomain
 from packages.ingestion.normalizer import normalize_text
 from datetime import datetime
 
 if TYPE_CHECKING:
-    from packages.core.models import PromptDNA
+    from packages.core.models import PromptDNA, PromptInstance as PromptInstanceDomain
 
 
 class PromptRepository:
@@ -24,7 +23,7 @@ class PromptRepository:
     def __init__(self, db: Session):
         self.db = db
     
-    def create_from_instance(self, instance: PromptInstanceDomain) -> PromptInstanceModel:
+    def create_from_instance(self, instance: "PromptInstanceDomain") -> PromptInstanceModel:
         """Create a new prompt record from a domain instance"""
         existing = self.get_by_id(instance.prompt_id)
         if existing:
@@ -98,12 +97,23 @@ class PromptRepository:
         return [(r.prompt_id, r.simhash) for r in results]
     
     def get_pending(self, limit: int = 100) -> List[PromptInstanceModel]:
-        """Get prompts that haven't been assigned to a family"""
+        """Get pending (unprocessed) prompts."""
         return (
             self.db.query(PromptInstanceModel)
-            .filter(PromptInstanceModel.family_id.is_(None))
+            .filter(PromptInstanceModel.embedding_vector == None)
             .limit(limit)
             .all()
+        )
+
+    def count_new_members_since(self, family_id: str, since: datetime) -> int:
+        """Count members added to a family after a specific timestamp."""
+        return (
+            self.db.query(PromptInstanceModel)
+            .filter(
+                PromptInstanceModel.family_id == family_id,
+                PromptInstanceModel.created_at > since
+            )
+            .count()
         )
     
     def update_family(self, prompt_id: str, family_id: str) -> None:
@@ -129,10 +139,61 @@ class PromptRepository:
             .limit(limit)
             .all()
         )
+    
+    def get_all(self) -> List[PromptInstanceModel]:
+        """Get all prompts"""
+        return self.db.query(PromptInstanceModel).all()
+    
+    def get_pending_count(self) -> int:
+        """Count prompts that haven't been assigned to a family"""
+        return (
+            self.db.query(PromptInstanceModel)
+            .filter(PromptInstanceModel.family_id.is_(None))
+            .count()
+        )
+    
+    def get_classified_count(self) -> int:
+        """Count prompts that have been assigned to a family"""
+        return (
+            self.db.query(PromptInstanceModel)
+            .filter(PromptInstanceModel.family_id.isnot(None))
+            .count()
+        )
+    
+    def update_embedding(self, prompt_id: str, embedding: List[float]) -> None:
+        """Update prompt embedding vector"""
+        prompt = self.get_by_id(prompt_id)
+        if prompt:
+            prompt.embedding_vector = embedding
+            prompt.updated_at = datetime.utcnow()
+            self.db.commit()
+    
+    def update_embedding_and_family(
+        self, 
+        prompt_id: str, 
+        embedding: List[float], 
+        family_id: Optional[str]
+    ) -> None:
+        """Update prompt embedding and family assignment"""
+        prompt = self.get_by_id(prompt_id)
+        if prompt:
+            prompt.embedding_vector = embedding
+            prompt.family_id = family_id
+            prompt.updated_at = datetime.utcnow()
+            self.db.commit()
 
     def count_all(self) -> int:
         """Get total count of prompts."""
         return self.db.query(PromptInstanceModel).count()
+    
+    def clear_all_embeddings(self) -> int:
+        """Clear all embedding vectors (use when switching embedding models)."""
+        count = self.db.query(PromptInstanceModel).filter(
+            PromptInstanceModel.embedding_vector != None,
+            PromptInstanceModel.embedding_vector != []
+        ).update({PromptInstanceModel.embedding_vector: []})
+        self.db.commit()
+        return count
     
     def count_pending(self) -> int:
         """Get count of prompts without family assignment."""
@@ -173,6 +234,79 @@ class FamilyRepository:
         """Update family member count"""
         family = self.get_by_id(family_id)
         if family:
+            family.member_count = count
+            family.updated_at = datetime.utcnow()
+            self.db.commit()
+    
+    def get_all_centroids(self) -> Dict[str, List[float]]:
+        """Get all family centroids as dict of family_id -> centroid vector"""
+        families = self.get_all()
+        return {
+            f.family_id: f.centroid_vector 
+            for f in families 
+            if f.centroid_vector is not None
+        }
+    
+    def create_or_update_family(
+        self,
+        cluster_id: int,
+        centroid: Optional[List[float]],
+        member_count: int,
+        family_name: Optional[str] = None
+    ) -> str:
+        """
+        Create a new family or update existing one for a cluster.
+        
+        Args:
+            cluster_id: HDBSCAN cluster ID
+            centroid: Centroid vector for the cluster
+            member_count: Number of prompts in the cluster
+            family_name: Optional custom name (generated by LLM)
+        
+        Returns:
+            family_id of created/updated family
+        """
+        import uuid
+        
+        # Use provided name or fallback to Cluster-X
+        name = family_name or f"Cluster-{cluster_id}"
+        existing = (
+            self.db.query(PromptFamilyModel)
+            .filter(PromptFamilyModel.family_name == name)
+            .first()
+        )
+        
+        if existing:
+            # Update existing family
+            existing.family_name = name  # Update name in case it changed
+            existing.centroid_vector = centroid
+            existing.member_count = member_count
+            existing.updated_at = datetime.utcnow()
+            existing.version += 1
+            self.db.commit()
+            return existing.family_id
+        else:
+            # Create new family
+            family = PromptFamilyModel(
+                family_id=str(uuid.uuid4()),
+                family_name=name,
+                description=f"Auto-generated cluster {cluster_id}",
+                centroid_vector=centroid,
+                member_count=member_count
+            )
+            self.db.add(family)
+            self.db.commit()
+            return family.family_id
+    
+    def update_all_member_counts(self) -> None:
+        """Update member counts for all families based on actual prompt counts"""
+        families = self.get_all()
+        for family in families:
+            count = (
+                self.db.query(PromptInstanceModel)
+                .filter(PromptInstanceModel.family_id == family.family_id)
+                .count()
+            )
             family.member_count = count
             family.updated_at = datetime.utcnow()
             self.db.commit()
@@ -248,9 +382,40 @@ class TemplateRepository:
             .first()
         )
     
+    def get_all(self, limit: int = 20, offset: int = 0) -> List[TemplateModel]:
+        """Get all templates with pagination."""
+        return (
+            self.db.query(TemplateModel)
+            .order_by(TemplateModel.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
+    
     def count_all(self) -> int:
         """Get total count of templates."""
         return self.db.query(TemplateModel).count()
+
+    def update_template(
+        self,
+        template_id: str,
+        template_text: str,
+        slots: dict,
+    ) -> Optional[TemplateModel]:
+        """Update an existing template with new text/slots."""
+        template = (
+            self.db.query(TemplateModel)
+            .filter(TemplateModel.template_id == template_id)
+            .first()
+        )
+        if template:
+            template.template_text = template_text
+            template.slots = slots
+            template.template_version += 1
+            template.updated_at = datetime.utcnow()
+            self.db.commit()
+            self.db.refresh(template)
+        return template
 
 
 class LineageRepository:
@@ -375,3 +540,4 @@ class LineageRepository:
         from packages.storage.models import Lineage as LineageModel
         
         return self.db.query(LineageModel).count()
+        self.db.commit()
