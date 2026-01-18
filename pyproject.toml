@@ -18,6 +18,9 @@ dependencies = [
     "InstructorEmbedding>=1.0.0",
     "portkey-ai>=1.0.0",
     "python-dotenv>=1.0.0",
+    "httpx>=0.25.0",
+    "aiofiles>=23.2.0",
+    "datasketch>=1.6.0",
 ]
 
 [project.optional-dependencies]

@@ -63,7 +63,7 @@ def ingest(
         try:
             prompt_repo = PromptRepository(db)
             ingestor = PortKeyIngestor(api_key=api_key)
-            time_min = datetime.utcnow() - timedelta(days=1)
+            time_min = utcnow() - timedelta(days=1)
             instances = asyncio.run(ingestor.run_ingestion(time_min=time_min))
             
             saved = 0
@@ -428,8 +428,8 @@ def stats(
         families = family_repo.get_all()
         avg_family_size = sum(f.member_count for f in families) / len(families) if families else 0
         
-        latest_prompt = prompt_repo.get_latest(limit=1)
-        last_ingestion = latest_prompt[0].created_at if latest_prompt else None
+        latest_prompts = prompt_repo.get_latest(limit=1)
+        last_ingestion = latest_prompts[0].created_at if latest_prompts and len(latest_prompts) > 0 else None
         
         stats_data = {
             "prompts": {

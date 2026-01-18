@@ -5,8 +5,13 @@ SQLAlchemy models for database tables
 import uuid
 from sqlalchemy import Column, String, Integer, Text, DateTime, JSON, ForeignKey, Float, Boolean
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from packages.storage.database import Base
+
+
+def utcnow():
+    """Get current UTC datetime (compatible with Python 3.11+)"""
+    return datetime.now(timezone.utc)
 
 
 class PromptFamily(Base):
@@ -23,8 +28,8 @@ class PromptFamily(Base):
     centroid_vector = Column(JSON)
     version = Column(Integer, default=1)
     
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
     
     members = relationship("PromptInstance", back_populates="family")
     templates = relationship("Template", back_populates="family")
@@ -51,8 +56,8 @@ class PromptInstance(Base):
     metadata_ = Column(JSON, default={})
     is_template_seed = Column(Boolean, default=False)
     
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
     
     family = relationship("PromptFamily", back_populates="members")
 
@@ -72,8 +77,8 @@ class Template(Base):
     template_version = Column(Integer, default=1)
     quality_score = Column(Float)
     
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
     
     family = relationship("PromptFamily", back_populates="templates")
 

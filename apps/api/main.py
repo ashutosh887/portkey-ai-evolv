@@ -4,7 +4,12 @@ from sqlalchemy.orm import Session
 from typing import Optional
 import tempfile
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+
+def utcnow():
+    """Get current UTC datetime (compatible with Python 3.11+)"""
+    return datetime.now(timezone.utc)
 
 from packages.storage.database import get_db
 from packages.storage.repositories import PromptRepository, FamilyRepository, TemplateRepository, LineageRepository
@@ -101,17 +106,23 @@ async def ingest_portkey(
     
     try:
         ingestor = PortKeyIngestor(api_key=api_key)
-        time_min = datetime.utcnow() - timedelta(days=1)
+        time_min = utcnow() - timedelta(days=1)
         instances = await ingestor.run_ingestion(time_min=time_min)
         
         prompt_repo = PromptRepository(db)
         saved = 0
+        duplicates = 0
         for instance in instances:
             try:
                 prompt_repo.create_from_instance(instance)
                 saved += 1
-            except Exception:
-                pass
+            except Exception as e:
+                # Check if it's a duplicate error
+                if "already exists" in str(e).lower() or "duplicate" in str(e).lower():
+                    duplicates += 1
+                # Log other errors but continue processing
+                import logging
+                logging.warning(f"Failed to ingest instance: {str(e)}")
         
         return {
             "status": "success",
@@ -184,8 +195,11 @@ async def get_family(
         "members": [
             {
                 "prompt_id": m.prompt_id,
-                "preview": m.original_text[:100] + "..." if len(m.original_text) > 100 else m.original_text,
+                "original_text": m.original_text,
                 "created_at": m.created_at.isoformat() if m.created_at else None,
+                "lineage": {
+                    "has_lineage": False,
+                },
             }
             for m in members
         ],
@@ -193,6 +207,7 @@ async def get_family(
             "template_id": template.template_id,
             "template_text": template.template_text,
             "slots": template.slots,
+            "template_version": template.template_version,
             "quality_score": template.quality_score,
         } if template else None,
     }
@@ -290,22 +305,28 @@ async def extract_template(
         llm_client = LLMClient()
         template = await llm_client.extract_template(prompt_dnas)
     except Exception as e:
+        import logging
+        logging.warning(f"LLMClient failed, falling back to MockLLMClient: {str(e)}")
         from packages.llm import MockLLMClient
         llm_client = MockLLMClient()
         template = await llm_client.extract_template(prompt_dnas)
     
-    template_repo.create_template(
-        family_id=family_id,
-        template_text=template.text,
-        slots={"variables": template.variables, "example_values": template.example_values},
-        quality_score=None,
-    )
-    
-    return {
-        "status": "success",
-        "template_text": template.text,
-        "variables": template.variables,
-    }
+    try:
+        created_template = template_repo.create_template(
+            family_id=family_id,
+            template_text=template.text,
+            slots={"variables": template.variables, "example_values": template.example_values},
+            quality_score=None,
+        )
+        
+        return {
+            "status": "success",
+            "template_id": created_template.template_id if hasattr(created_template, 'template_id') else None,
+            "template_text": template.text,
+            "variables": template.variables,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save template: {str(e)}")
 
 
 @app.get("/prompts")
@@ -324,9 +345,14 @@ async def list_prompts(
         "prompts": [
             {
                 "prompt_id": p.prompt_id,
-                "original_text": p.original_text[:100] + "..." if len(p.original_text) > 100 else p.original_text,
+                "original_text": p.original_text,
+                "normalized_text": p.normalized_text,
                 "family_id": p.family_id,
                 "created_at": p.created_at.isoformat() if p.created_at else None,
+                "dna": None,  # Will be populated in detail endpoint
+                "lineage": {
+                    "has_lineage": False,
+                },
             }
             for p in prompts
         ],
@@ -507,8 +533,8 @@ async def stats(
     families = family_repo.get_all()
     avg_family_size = sum(f.member_count for f in families) / len(families) if families else 0
     
-    latest_prompt = prompt_repo.get_latest(limit=1)
-    last_ingestion = latest_prompt[0].created_at if latest_prompt else None
+    latest_prompts = prompt_repo.get_latest(limit=1)
+    last_ingestion = latest_prompts[0].created_at if latest_prompts and len(latest_prompts) > 0 else None
     
     return {
         "prompts": {

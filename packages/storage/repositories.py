@@ -11,7 +11,12 @@ from packages.storage.models import (
     Template as TemplateModel,
 )
 from packages.ingestion.normalizer import normalize_text
-from datetime import datetime
+from datetime import datetime, timezone
+
+
+def utcnow():
+    """Get current UTC datetime (compatible with Python 3.11+)"""
+    return datetime.now(timezone.utc)
 
 if TYPE_CHECKING:
     from packages.core.models import PromptDNA, PromptInstance as PromptInstanceDomain
@@ -165,7 +170,7 @@ class PromptRepository:
         prompt = self.get_by_id(prompt_id)
         if prompt:
             prompt.embedding_vector = embedding
-            prompt.updated_at = datetime.utcnow()
+            prompt.updated_at = utcnow()
             self.db.commit()
     
     def update_embedding_and_family(
@@ -179,7 +184,7 @@ class PromptRepository:
         if prompt:
             prompt.embedding_vector = embedding
             prompt.family_id = family_id
-            prompt.updated_at = datetime.utcnow()
+            prompt.updated_at = utcnow()
             self.db.commit()
 
     def count_all(self) -> int:
@@ -235,7 +240,7 @@ class FamilyRepository:
         family = self.get_by_id(family_id)
         if family:
             family.member_count = count
-            family.updated_at = datetime.utcnow()
+            family.updated_at = utcnow()
             self.db.commit()
     
     def get_all_centroids(self) -> Dict[str, List[float]]:
@@ -281,7 +286,7 @@ class FamilyRepository:
             existing.family_name = name  # Update name in case it changed
             existing.centroid_vector = centroid
             existing.member_count = member_count
-            existing.updated_at = datetime.utcnow()
+            existing.updated_at = utcnow()
             existing.version += 1
             self.db.commit()
             return existing.family_id
@@ -308,7 +313,7 @@ class FamilyRepository:
                 .count()
             )
             family.member_count = count
-            family.updated_at = datetime.utcnow()
+            family.updated_at = utcnow()
             self.db.commit()
 
     def create_family(

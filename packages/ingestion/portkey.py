@@ -13,9 +13,14 @@ import asyncio
 import json
 import logging
 import httpx
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from packages.core.models import PromptInstance
+
+
+def utcnow():
+    """Get current UTC datetime (compatible with Python 3.11+)"""
+    return datetime.now(timezone.utc)
 
 logger = logging.getLogger(__name__)
 
@@ -193,8 +198,8 @@ class PortKeyIngestor:
 
     def _parse_date(self, date_str: Optional[str]) -> datetime:
         if not date_str:
-            return datetime.utcnow()
+            return utcnow()
         try:
             return datetime.fromisoformat(date_str.replace('Z', '+00:00'))
         except ValueError:
-            return datetime.utcnow()
+            return utcnow()

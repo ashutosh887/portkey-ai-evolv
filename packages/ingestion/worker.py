@@ -9,7 +9,12 @@ import asyncio
 import json
 import logging
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+
+def utcnow():
+    """Get current UTC datetime (compatible with Python 3.11+)"""
+    return datetime.now(timezone.utc)
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -36,7 +41,7 @@ def load_state() -> datetime:
         except Exception as e:
             logger.warning(f"Failed to load state: {e}")
     
-    return datetime.utcnow() - timedelta(hours=24)
+    return utcnow() - timedelta(hours=24)
 
 def save_state(last_run: datetime):
     """Save the last run time to state file"""
@@ -64,7 +69,7 @@ async def run_worker(interval_minutes: int = 10):
     while True:
         try:
             last_run_time = load_state()
-            current_run_time = datetime.utcnow()
+            current_run_time = utcnow()
             
             logger.info(f"Running ingestion from {last_run_time} to now")
             instances = await ingestor.run_ingestion(time_min=last_run_time)

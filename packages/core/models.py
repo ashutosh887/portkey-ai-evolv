@@ -4,8 +4,13 @@ Domain models for Prompt Classification & Template System
 
 from typing import Optional, Any, Dict, List
 from pydantic import BaseModel, Field
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
+
+
+def utcnow():
+    """Get current UTC datetime (compatible with Python 3.11+)"""
+    return datetime.now(timezone.utc)
 
 
 class SlotType(str, Enum):
@@ -111,8 +116,8 @@ class PromptFamily(BaseModel):
     needs_template_update: bool = True
     template_update_threshold: int = 5
     
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utcnow)
+    updated_at: datetime = Field(default_factory=utcnow)
     
     def check_needs_template_update(self) -> bool:
         """Check if family needs a template update based on threshold."""
@@ -139,8 +144,8 @@ class PromptInstance(BaseModel):
     metadata: Dict[str, Any] = Field(default_factory=dict)
     is_template_seed: bool = False
     
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utcnow)
+    updated_at: datetime = Field(default_factory=utcnow)
 
 
 class Template(BaseModel):
@@ -173,8 +178,8 @@ class Template(BaseModel):
     # Intent mapping
     intent_embedding: Optional[List[float]] = None
     
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utcnow)
+    updated_at: datetime = Field(default_factory=utcnow)
     
     @property
     def version_string(self) -> str:
