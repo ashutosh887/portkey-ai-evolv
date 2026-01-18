@@ -56,16 +56,28 @@ This guide covers deploying Evolv to various platforms.
 
 ### Render
 
-1. **New Web Service**
-   - Connect GitHub repository
-   - Build Command: `uv sync --frozen`
-   - Start Command: `uv run uvicorn apps.api.main:app --host 0.0.0.0 --port $PORT`
+Render expects your app to **listen on the `PORT` environment variable**. If you use `--port 8000` or forget `$PORT`, you’ll see **"No open ports detected"** and the deploy will fail.
 
-2. **Environment Variables**
-   - Add all variables from `.env.example`
+**Option A – Docker (recommended)**
 
-3. **Deploy**
-   - Render auto-deploys on push
+- Connect the repo and use the **Docker** runtime.
+- Use **Dockerfile path:** `infra/Dockerfile` (or `./infra/Dockerfile`).
+- The Dockerfile is set up to run: `--port ${PORT:-8000}` so Render’s `PORT` is used.
+- Set env vars: `DATABASE_URL`, `PORTKEY_API_KEY`, etc.
+- If the first deploy has no DB: run a one-off or add an init step. For SQLite, ensure a writable disk (Render’s ephemeral filesystem is fine for `/app/data` if the Dockerfile creates it).
+
+**Option B – Native (no Docker)**
+
+- **Build Command:** `uv sync --frozen`
+- **Start Command:** `uv run uvicorn apps.api.main:app --host 0.0.0.0 --port $PORT`  
+  - Must use `$PORT`, not `8000`.
+- **Root Directory:** leave blank or set to repo root.
+- Add env vars from `.env.example`.
+
+**Environment Variables**
+
+- Add at least: `DATABASE_URL`, `PORTKEY_API_KEY` (and optionally `PORTKEY_VIRTUAL_KEY`).
+- For SQLite: `DATABASE_URL=sqlite:///./data/genome.db` (ensure `/app/data` exists and is writable in your setup).
 
 ---
 
