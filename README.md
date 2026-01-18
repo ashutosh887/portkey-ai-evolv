@@ -4,6 +4,8 @@
 
 Evolv treats prompts like genetic sequences—extracting their DNA, tracking mutations, and understanding lineage. Transform prompt sprawl into organized, versioned templates with automatic family detection and evolution tracking.
 
+**Try it live:** [https://tryevolv.vercel.app/](https://tryevolv.vercel.app/)
+
 ## What It Does
 
 Evolv ingests prompts from production systems, extracts their structural DNA (variables, constraints, instructions), clusters them into semantic families, and tracks how they evolve over time. It provides:
@@ -108,6 +110,8 @@ The web application provides:
 - **Log Generator** – Generate prompt logs for Portkey observability
 - **Family Explorer** – Browse and analyze prompt families
 - **Prompt Details** – View DNA structure and evolution lineage
+
+**Try it live:** [https://tryevolv.vercel.app/](https://tryevolv.vercel.app/)
 
 Logs generated are automatically sent to Portkey observability and can be ingested by the Evolv system.
 
