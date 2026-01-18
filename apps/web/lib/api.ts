@@ -83,19 +83,29 @@ export interface LineageLink {
 }
 
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  })
+  const url = `${API_BASE_URL}${endpoint}`
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers,
+      },
+    })
 
-  if (!response.ok) {
-    throw new Error(`API error: ${response.statusText}`)
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => response.statusText)
+      throw new Error(`API error (${response.status}): ${errorText || response.statusText}`)
+    }
+
+    return response.json()
+  } catch (error) {
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error(`Failed to connect to API at ${API_BASE_URL}. Check NEXT_PUBLIC_API_URL environment variable.`)
+    }
+    throw error
   }
-
-  return response.json()
 }
 
 export const api = {
