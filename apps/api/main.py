@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from packages.storage.database import get_db
 from packages.storage.repositories import PromptRepository, FamilyRepository, TemplateRepository, LineageRepository
 from packages.storage.models import PromptInstance
-from packages.core import ProcessingService
+from packages.core.processing import ProcessingService
 from packages.ingestion.files import ingest_from_file
 from packages.ingestion.portkey import PortKeyIngestor
 from packages.core.processing import _model_to_dna
@@ -324,7 +324,7 @@ async def list_prompts(
         "prompts": [
             {
                 "prompt_id": p.prompt_id,
-                "preview": p.original_text[:100] + "..." if len(p.original_text) > 100 else p.original_text,
+                "original_text": p.original_text[:100] + "..." if len(p.original_text) > 100 else p.original_text,
                 "family_id": p.family_id,
                 "created_at": p.created_at.isoformat() if p.created_at else None,
             }
@@ -453,6 +453,41 @@ async def get_process_status(
     return {
         "pending_count": pending_count,
         "last_processed_at": latest.updated_at.isoformat() if latest and latest.updated_at else None,
+    }
+
+
+@app.get("/templates")
+async def list_templates(
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+):
+    template_repo = TemplateRepository(db)
+    family_repo = FamilyRepository(db)
+    
+    templates = template_repo.get_all(limit=limit, offset=offset)
+    total = template_repo.count_all()
+    
+    # Enrich with family names
+    result = []
+    for t in templates:
+        family = family_repo.get_by_id(t.family_id)
+        result.append({
+            "template_id": t.template_id,
+            "family_id": t.family_id,
+            "family_name": family.family_name if family else None,
+            "template_text": t.template_text,
+            "slots": t.slots,
+            "template_version": t.template_version,
+            "quality_score": t.quality_score,
+            "created_at": t.created_at.isoformat() if t.created_at else None,
+        })
+    
+    return {
+        "templates": result,
+        "total": total,
+        "limit": limit,
+        "offset": offset,
     }
 
 

@@ -159,4 +159,26 @@ export const api = {
       pending_count: number
       last_processed_at?: string
     }>('/process/status'),
+
+  // Template endpoints
+  templates: (params?: { limit?: number; offset?: number }) => {
+    const searchParams = new URLSearchParams()
+    if (params?.limit) searchParams.set('limit', params.limit.toString())
+    if (params?.offset) searchParams.set('offset', params.offset.toString())
+    return fetchAPI<{ templates: (Template & { family_id: string })[]; total: number; limit: number; offset: number }>(
+      `/templates?${searchParams.toString()}`
+    )
+  },
+
+  getTemplate: (familyId: string) =>
+    fetchAPI<Template & { family_id: string }>(`/families/${familyId}/template`),
+
+  extractTemplate: (familyId: string) =>
+    fetchAPI<{
+      status: string
+      template_id?: string
+      template_text?: string
+      variables?: string[]
+      message?: string
+    }>(`/families/${familyId}/template/extract`, { method: 'POST' }),
 }

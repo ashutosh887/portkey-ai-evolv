@@ -10,12 +10,11 @@ from packages.storage.models import (
     PromptFamily as PromptFamilyModel,
     Template as TemplateModel,
 )
-from packages.core.models import PromptInstance as PromptInstanceDomain
 from packages.ingestion.normalizer import normalize_text
 from datetime import datetime
 
 if TYPE_CHECKING:
-    from packages.core.models import PromptDNA
+    from packages.core.models import PromptDNA, PromptInstance as PromptInstanceDomain
 
 
 class PromptRepository:
@@ -24,7 +23,7 @@ class PromptRepository:
     def __init__(self, db: Session):
         self.db = db
     
-    def create_from_instance(self, instance: PromptInstanceDomain) -> PromptInstanceModel:
+    def create_from_instance(self, instance: "PromptInstanceDomain") -> PromptInstanceModel:
         """Create a new prompt record from a domain instance"""
         existing = self.get_by_id(instance.prompt_id)
         if existing:
@@ -361,6 +360,16 @@ class TemplateRepository:
             .filter(TemplateModel.family_id == family_id)
             .order_by(TemplateModel.created_at.desc())
             .first()
+        )
+    
+    def get_all(self, limit: int = 20, offset: int = 0) -> List[TemplateModel]:
+        """Get all templates with pagination."""
+        return (
+            self.db.query(TemplateModel)
+            .order_by(TemplateModel.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+            .all()
         )
     
     def count_all(self) -> int:

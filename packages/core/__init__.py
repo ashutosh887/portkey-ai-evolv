@@ -9,7 +9,8 @@ from packages.core.models import (
     PromptDNA,
     CanonicalTemplate,
 )
-from packages.core.processing import ProcessingService
+# Note: ProcessingService is NOT imported here to avoid circular imports.
+# Import it directly from packages.core.processing where needed.
 
 __all__ = [
     "PromptInstance",
@@ -17,5 +18,4 @@ __all__ = [
     "Template",
     "PromptDNA",
     "CanonicalTemplate",
-    "ProcessingService",
 ]
